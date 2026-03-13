@@ -44,7 +44,7 @@ class ChatMembersRoleModel(models.Model):
     name = models.CharField(max_length=50)
     able_to_invite = models.BooleanField(default=False)
     able_to_delete = models.BooleanField(default=False)
-    able_to_message = models.BooleanField(default=False)
+    able_to_message = models.BooleanField(default=True)
     able_to_update = models.BooleanField(default=False)
     able_to_pin = models.BooleanField(default=False)
     able_to_edit_chat = models.BooleanField(default=False)
@@ -58,8 +58,12 @@ class ChatMembersModel(models.Model):
 
     chat = models.ForeignKey(ChatModel, on_delete=models.CASCADE, related_name="member")
     user = models.ForeignKey(UserModel, on_delete=models.CASCADE, related_name="member")
-    role = models.ForeignKey(
-        ChatMembersRoleModel, on_delete=models.CASCADE, related_name="member"
+    role = models.OneToOneField(
+        ChatMembersRoleModel,
+        on_delete=models.CASCADE,
+        related_name="member",
+        null=True,
+        blank=True,
     )
     joined_at = models.DateTimeField(auto_now_add=True)
     left_at = models.DateTimeField(blank=True, null=True)

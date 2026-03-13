@@ -99,3 +99,15 @@ class BlockUserModel(models.Model):
     )
     create_at = models.DateTimeField(auto_now_add=True)
     expired_at = models.DateField(null=True, blank=True)
+
+
+class StatusUserModel(models.Model):
+    class Meta:
+        db_table = "status_user"
+
+    user = models.OneToOneField(
+        UserModel, on_delete=models.CASCADE, related_name="status"
+    )
+    last_seen_at = models.DateTimeField(blank=True, null=True)
+    is_online = models.BooleanField(default=False)
+    status = models.CharField(max_length=50)
