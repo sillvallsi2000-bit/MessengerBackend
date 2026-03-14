@@ -9,6 +9,7 @@ from .views import (
     DestroyMemberRoleAPI,
     GetMeInfoAPI,
     BanUserAPI,
+    UpdateMembersAPI,
 )
 
 # fmt: off
@@ -19,12 +20,16 @@ urlpatterns = [
     path("create_channel/", CreateChannelAPI.as_view()),
     path("list_chat/", ListCreateDirectChatAPI.as_view()),
     path("get_me_info/<int:chat_id>/", GetMeInfoAPI.as_view()),
+
     # change
 
 
     path("add_member/<int:chat_id>/", CreateMembersAPI.as_view()),
     path(
         "delete_member/<int:target_id>/chat/<int:chat_id>/", DestroyMemberAPI.as_view()
+    ),
+    path(
+        "update_member/<int:chat_id>/", UpdateMembersAPI.as_view()
     ),
     # change_ two step
 

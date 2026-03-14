@@ -5,10 +5,17 @@ from rest_framework.generics import (
     RetrieveUpdateDestroyAPIView,
     DestroyAPIView,
     RetrieveAPIView,
+    UpdateAPIView,
 )
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
-from .models import ChatModel, ChatMembersModel, ChatMembersRoleModel, UserModel
+from .models import (
+    ChatModel,
+    ChatMembersModel,
+    ChatMembersRoleModel,
+    UserModel,
+    ChatSettingsModel,
+)
 from .serializers import (
     ChatDirectSerializer,
     ChatGroupSerializer,
@@ -20,6 +27,8 @@ from .serializers import (
     FullMemberSerializer,
     ChatBannedUserSerializer,
     AddBanMembersSerializers,
+    UpdateRoleSerializer,
+    ChatSettingsSerializer,
 )
 
 from apps.user.serializers import UserSerializer
@@ -47,9 +56,28 @@ class CreateChannelAPI(ListCreateAPIView):
     serializer_class = ChatChannelSerializer
 
 
+class UpdateChatSettingsAPI(UpdateAPIView):
+    serializer_class = ChatSettingsSerializer
+
+
 # ------
 class CreateMembersAPI(GenericAPIView):
     serializer_class = AddMembersToChatSerializer
+
+    def post(self, *args, **kwargs):
+        data = self.request.data
+        user = self.request.user
+        chat_id = self.kwargs.get("chat_id")
+        serializer = self.get_serializer(
+            data=data, context={"user": user, "chat_id": chat_id}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class UpdateMembersAPI(GenericAPIView):
+    serializer_class = UpdateRoleSerializer
 
     def post(self, *args, **kwargs):
         data = self.request.data

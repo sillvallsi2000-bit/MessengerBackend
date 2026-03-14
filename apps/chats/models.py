@@ -117,3 +117,10 @@ class ChatInvitationModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     message = models.CharField(max_length=100)
+
+
+# update_member
+# chat_settings
+# edit_chat
+# chat_type(permission)
+# invite link

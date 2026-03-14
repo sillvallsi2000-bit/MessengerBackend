@@ -22,7 +22,7 @@ from core.dataclass.dataclass import (
 
 from core.enum.enum import ChatTypesChoice
 from rest_framework.exceptions import PermissionDenied
-from core.services.chat_service import change_or_create_role
+from core.services.chat_service import create_role, update_role
 
 
 class ChatSerializer(ModelSerializer):
@@ -80,12 +80,6 @@ class ChatTypesSerializer(ModelSerializer):
         fields = ("__all__",)
 
 
-class ChatSettingsSerializer(ModelSerializer):
-    class Meta:
-        model = ChatSettingsModel
-        fields = ("chat", "allow_members", "is_private", "theme")
-
-
 class ChatBannedUserSerializer(ModelSerializer):
     class Meta:
         model = ChatBannedUserModel
@@ -114,6 +108,15 @@ class ChatInvitationSerializer(ModelSerializer):
         )
 
 
+# chat
+
+
+class ChatSettingsSerializer(ModelSerializer):
+    class Meta:
+        model = ChatSettingsModel
+        fields = ("chat", "allow_members", "is_private", "theme")
+
+
 class FullMemberSerializer(ModelSerializer):
     chat = ChatSerializer()
     role = ChatMembersRoleSerializer()
@@ -134,7 +137,8 @@ class ChatDirectSerializer(ChatSerializer):
     def create(self, validated_data):
         member: ChatMembersDataclass = validated_data.pop("member")
         user: UserDataclass = self.context["request"].user
-        chat: ChatDataclass = get_or_create_chat(user_1=user, user_2=member)
+        chat: ChatDataclass = get_or_create_chat(owner=user, target_user=member)
+        chat_settings, created = ChatSettingsModel.objects.get_or_create(chat=chat)
         return chat
 
 
@@ -158,6 +162,21 @@ class ChatChannelSerializer(ChatGroupSerializer):
         return chat
 
 
+class ChatUpdateSettingsSerializer(ChatSettingsSerializer):
+    def validate(self, attrs):
+        user = self.context["user"]
+        chat_id = self.context["chat_id"]
+        chat_permission = ManageRolePermission(user=user, chat_id=chat_id)
+        chat_permission.able_to_edit_chat()
+        return attrs
+
+    def update(self, instance, validated_data):
+        return super().update(instance, validated_data)
+
+
+# roles
+
+
 class AddRoleSerializer(ChatMembersRoleSerializer):
     target_user = serializers.PrimaryKeyRelatedField(
         queryset=UserModel.objects.all(), write_only=True
@@ -179,11 +198,41 @@ class AddRoleSerializer(ChatMembersRoleSerializer):
     def create(self, validated_data):
         target_user = validated_data.pop("target_user")
         chat_id = self.context.get("chat_id")
-        member_role = change_or_create_role(
+        member_role = create_role(
             target_user=target_user, chat_id=chat_id, data=validated_data
         )
 
         return member_role
+
+
+class UpdateRoleSerializer(ChatMembersSerializer):
+    target_user = serializers.PrimaryKeyRelatedField(
+        queryset=UserModel.objects.all(), write_only=True
+    )
+
+    class Meta(ChatMembersRoleSerializer.Meta):
+        fields = ChatMembersRoleSerializer.Meta.fields + ("target_user",)
+
+    def validate(self, attrs):
+        target_user = attrs.get("target_user")
+        chat_id = self.context.get("chat_id")
+        user = self.context["user"]
+        chat_permission = ChatPermissionManage(
+            user=user, target_user=target_user, chat_id=chat_id
+        )
+        chat_permission.able_to_manage_role()
+        return attrs
+
+    def create(self, validated_data):
+        target_user = validated_data.pop("target_user")
+        chat_id = self.context.get("chat_id")
+        member_role = update_role(
+            target_user=target_user, chat_id=chat_id, data=validated_data
+        )
+        return member_role
+
+
+# members
 
 
 class AddMembersToChatSerializer(Serializer):

@@ -49,17 +49,41 @@ def create_group_channel(
     return new_group
 
 
-def change_or_create_role(target_user: UserDataclass, chat_id: int, data):
+# def change_or_create_role(target_user: UserDataclass, chat_id: int, data):
 
+#     member = ChatMembersModel.objects.filter(user=target_user, chat_id=chat_id).first()
+
+#     if member.role:
+#         role = member.role
+#         for attrs, value in data.items():
+#             setattr(role, attrs, value)
+#         role.save()
+#         role = ChatMembersRoleModel.objects.create(**data)
+#         member.role = role
+#         member.save()
+
+#     return role
+
+
+def create_role(target_user: UserDataclass, chat_id: int, data):
     member = ChatMembersModel.objects.filter(user=target_user, chat_id=chat_id).first()
 
     if member.role:
-        role = member.role
-        for attrs, value in data.items():
-            setattr(role, attrs, value)
-        role.save()
-        role = ChatMembersRoleModel.objects.create(**data)
-        member.role = role
-        member.save()
+        return member.role
+    role = ChatMembersRoleModel.objects.create(**data)
+    member.role = role
+    member.save()
 
+    return role
+
+
+def update_role(target_user: UserDataclass, chat_id: int, data):
+    member = ChatMembersModel.objects.filter(user=target_user, chat_id=chat_id).first()
+    if not member or not member.role:
+        return None
+
+    role = member.role
+    for attr, value in data.items():
+        setattr(role, attr, value)
+    role.save()
     return role
