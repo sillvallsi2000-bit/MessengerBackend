@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "apps.user",
     "apps.auth",
     "apps.chats",
+    "apps.messages",
     "core",
     "corsheaders",
 ]
@@ -80,7 +81,7 @@ ASGI_APPLICATION = "config.asgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": "db",
+        "NAME": "db.sqlite3",
         # 'USER': 'root',
         # 'PASSWORD': 'root',
         # 'HOST': 'localhost',

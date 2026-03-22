@@ -64,6 +64,8 @@ class ManageRolePermission:
             raise PermissionDenied({"detail": "You are not a member of this chat"})
 
     def able_to_add_chat(self):
+        if not self.chat_member.role:
+            raise PermissionDenied({"detail": "Your role is not set in this chat"})
         if not self.chat_member.role.able_to_invite:
             raise PermissionDenied({"detail": "you do not have a permission"})
 

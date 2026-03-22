@@ -8,8 +8,13 @@ from .views import (
     DestroyMemberAPI,
     DestroyMemberRoleAPI,
     GetMeInfoAPI,
-    BanUserAPI,
+    BanMemberAPI,
     UpdateMembersAPI,
+    UpdateChatSettingsAPI,
+    UpdateGroupSettingsAPI,
+    InviteMemberAPI,
+    JoinToChatAPI,
+    
 )
 
 # fmt: off
@@ -20,6 +25,11 @@ urlpatterns = [
     path("create_channel/", CreateChannelAPI.as_view()),
     path("list_chat/", ListCreateDirectChatAPI.as_view()),
     path("get_me_info/<int:chat_id>/", GetMeInfoAPI.as_view()),
+    path("update_settings/chat/<int:chat_id>/", UpdateChatSettingsAPI.as_view()),
+    path("update_settings_group/chat/<int:chat_id>/", UpdateGroupSettingsAPI.as_view())
+
+
+    ,
 
     # change
 
@@ -44,8 +54,17 @@ urlpatterns = [
     ),
     path(
         "ban_user/<int:chat_id>/chat/",
-        BanUserAPI.as_view(),
+        BanMemberAPI.as_view(),
     ),
+    path(
+        "invite_user/<int:chat_id>/",
+        InviteMemberAPI.as_view(),
+    ),
+    path(
+        "join_to_chat/",
+        JoinToChatAPI.as_view(),
+    ),
+
 
 ]
 

@@ -23,6 +23,9 @@ from core.dataclass.dataclass import (
 from core.enum.enum import ChatTypesChoice
 from rest_framework.exceptions import PermissionDenied
 from core.services.chat_service import create_role, update_role
+from core.services.chat_service import generate_invite_url
+
+from rest_framework.permissions import IsAuthenticated
 
 
 class ChatSerializer(ModelSerializer):
@@ -106,6 +109,13 @@ class ChatInvitationSerializer(ModelSerializer):
             "updated_at",
             "message",
         )
+        read_only_fields = (
+            "chat",
+            "inviter",
+            "invite_url",
+            "status",
+            "message",
+        )
 
 
 # chat
@@ -115,6 +125,7 @@ class ChatSettingsSerializer(ModelSerializer):
     class Meta:
         model = ChatSettingsModel
         fields = ("chat", "allow_members", "is_private", "theme")
+        read_only_fields = ("chat",)
 
 
 class FullMemberSerializer(ModelSerializer):
@@ -149,29 +160,31 @@ class ChatGroupSerializer(ChatSerializer):
 
     def create(self, validated_data):
         user = self.context["request"].user
-        chat = create_group_channel(user, data=validated_data)
+        chat = create_group_channel(
+            user, data=validated_data, name=ChatTypesChoice.GROUP
+        )
+        chat_settings, created = ChatSettingsModel.objects.get_or_create(chat=chat)
         return chat
 
 
 class ChatChannelSerializer(ChatGroupSerializer):
+    permission_classes = [IsAuthenticated]
+
     def create(self, validated_data):
         user = self.context["request"].user
         chat = create_group_channel(
-            user=user, data=validated_data, chat_type_name=ChatTypesChoice.CHANNEL
+            user=user, data=validated_data, name=ChatTypesChoice.CHANNEL
         )
         return chat
 
 
-class ChatUpdateSettingsSerializer(ChatSettingsSerializer):
+class GroupChatSettinsSerializer(ChatSettingsSerializer):
     def validate(self, attrs):
         user = self.context["user"]
-        chat_id = self.context["chat_id"]
+        chat_id = self.context["user_id"]
         chat_permission = ManageRolePermission(user=user, chat_id=chat_id)
         chat_permission.able_to_edit_chat()
         return attrs
-
-    def update(self, instance, validated_data):
-        return super().update(instance, validated_data)
 
 
 # roles
@@ -276,3 +289,13 @@ class AddBanMembersSerializers(Serializer):
             chat_id=chat_id, banned_by=user, user=target_user
         )
         return ban_user
+
+
+# invite url
+
+
+class InviteUrlSerializer(ChatInvitationSerializer):
+    def create(self, validated_data):
+        validated_data["invite_url"] = generate_invite_url()
+
+        return ChatInvitationModel.objects.create(**validated_data)

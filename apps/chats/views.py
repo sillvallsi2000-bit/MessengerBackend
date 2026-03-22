@@ -15,6 +15,7 @@ from .models import (
     ChatMembersRoleModel,
     UserModel,
     ChatSettingsModel,
+    ChatInvitationModel
 )
 from .serializers import (
     ChatDirectSerializer,
@@ -25,10 +26,12 @@ from .serializers import (
     ChatMembersSerializer,
     ChatMembersRoleSerializer,
     FullMemberSerializer,
-    ChatBannedUserSerializer,
     AddBanMembersSerializers,
     UpdateRoleSerializer,
     ChatSettingsSerializer,
+    GroupChatSettinsSerializer,
+    ChatInvitationSerializer,
+    InviteUrlSerializer
 )
 
 from apps.user.serializers import UserSerializer
@@ -36,6 +39,7 @@ from core.dataclass.dataclass import ChatMembersDataclass
 from rest_framework.response import Response
 from core.permission.chat_permission import ManageRolePermission
 from rest_framework.exceptions import ValidationError
+from django.shortcuts import get_object_or_404
 
 
 class ListCreateDirectChatAPI(ListCreateAPIView):
@@ -58,6 +62,23 @@ class CreateChannelAPI(ListCreateAPIView):
 
 class UpdateChatSettingsAPI(UpdateAPIView):
     serializer_class = ChatSettingsSerializer
+    def get_object(self):
+        chat_id = self.kwargs["chat_id"]
+        return get_object_or_404(ChatSettingsModel, chat_id=chat_id)
+    
+
+class UpdateGroupSettingsAPI(UpdateAPIView):
+    serializer_class = GroupChatSettinsSerializer
+    def get_object(self):
+        data = self.request.data
+        chat_id = self.kwargs["chat_id"]
+        user = self.request.user
+        serializer = self.get_serializer(data = data, context={"user": user, "chat_id": chat_id})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+        
+
 
 
 # ------
@@ -160,7 +181,7 @@ class DestroyMemberRoleAPI(GenericAPIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class BanUserAPI(CreateAPIView):
+class BanMemberAPI(CreateAPIView):
     serializer_class = AddBanMembersSerializers
     permission_classes = [IsAuthenticated]
 
@@ -173,3 +194,42 @@ class BanUserAPI(CreateAPIView):
         )
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+#invite url
+
+class InviteMemberAPI(CreateAPIView):
+    serializer_class = InviteUrlSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        chat_id=self.kwargs["chat_id"]
+        member = ChatMembersModel.objects.get(
+            user=self.request.user,
+            chat_id=chat_id
+        )
+
+        serializer.save(
+            inviter=member,
+            chat_id=chat_id
+        )
+
+class JoinToChatAPI(GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        invite_url = request.data.get("invite_url")
+        if not invite_url:
+            return Response({"error": "invite_url is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        invite = get_object_or_404(ChatInvitationModel, invite_url=invite_url)
+        chat = invite.chat
+        user_member, created = ChatMembersModel.objects.get_or_create(user=request.user, chat_id = chat.id)
+        
+        chat.member.add(user_member)
+
+        return Response({
+            "chat_id": chat.id,
+            "joined_user": request.user.id,
+            "invite_url": invite.invite_url
+        }, status=status.HTTP_200_OK)

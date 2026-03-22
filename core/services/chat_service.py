@@ -9,6 +9,7 @@ from core.dataclass.dataclass import UserDataclass
 
 from typing import Any
 
+import secrets
 
 from apps.chats.models import ChatMembersRoleModel, ChatModel
 
@@ -33,36 +34,29 @@ def get_or_create_chat(owner: UserDataclass, target_user: UserDataclass) -> Chat
     return new_chat
 
 
-def create_group_channel(
-    user: UserDataclass,
-    data: dict[str, Any],
-) -> ChatModel:
-    chat_type = ChatTypesModel.objects.get(name=ChatTypesChoice.GROUP)
+def create_group_channel(user: UserDataclass, data: dict[str, Any], name) -> ChatModel:
+    chat_type = ChatTypesModel.objects.get(name=name)
     new_group = ChatModel.objects.create(
         name=data.get("name", "chat"),
         owner=user,
         chat_type=chat_type,
     )
 
-    ChatMembersModel.objects.create(user=user, chat=new_group)
+    member = ChatMembersModel.objects.create(user=user, chat=new_group)
+
+    owner_role = {
+        "name": "owner",
+        "able_to_invite": True,
+        "able_to_delete": True,
+        "able_to_update": True,
+        "able_to_ban": True,
+        "able_to_pin": True,
+        "able_to_edit_chat": True,
+        "able_to_manage": True,
+    }
+    create_role(target_user=user, chat_id=new_group.id, data=owner_role)
 
     return new_group
-
-
-# def change_or_create_role(target_user: UserDataclass, chat_id: int, data):
-
-#     member = ChatMembersModel.objects.filter(user=target_user, chat_id=chat_id).first()
-
-#     if member.role:
-#         role = member.role
-#         for attrs, value in data.items():
-#             setattr(role, attrs, value)
-#         role.save()
-#         role = ChatMembersRoleModel.objects.create(**data)
-#         member.role = role
-#         member.save()
-
-#     return role
 
 
 def create_role(target_user: UserDataclass, chat_id: int, data):
@@ -87,3 +81,7 @@ def update_role(target_user: UserDataclass, chat_id: int, data):
         setattr(role, attr, value)
     role.save()
     return role
+
+
+def generate_invite_url():
+    return secrets.token_urlsafe(16)
