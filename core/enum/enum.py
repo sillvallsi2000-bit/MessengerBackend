@@ -47,3 +47,9 @@ class ChatInvitationChoice(models.TextChoices):
     ACCEPTED = "accepted", "Accepted"
     DECLINED = "declined", "Declined"
     EXPIRED = "expired", "Expired"
+
+
+class MessageTypeChoices(models.TextChoices):
+    TEXT = "TEXT", "Text"
+    IMAGE = "IMAGE", "Image"
+    VIDEO = "VIDEO", "Video"

@@ -1,8 +1,7 @@
 from django.db import models
 from apps.chats.models import ChatModel
 from apps.user.models import UserModel
-
-# Create your models here.
+from core.enum.enum import MessageTypeChoices
 
 
 class MessagesTypeModel(models.Model):
@@ -11,7 +10,11 @@ class MessagesTypeModel(models.Model):
 
     name = models.CharField(max_length=100)
     description = models.CharField(max_length=100)
-    code = models.CharField(max_length=100)
+    code = models.CharField(
+        max_length=20,
+        choices=MessageTypeChoices.choices,
+        default=MessageTypeChoices.TEXT,
+    )
 
 
 class MessagesModel(models.Model):
@@ -151,7 +154,7 @@ class MessageReplaysModel(models.Model):
     class Meta:
         db_table = "message_replays"
 
-    mmessage = models.ForeignKey(
+    message = models.ForeignKey(
         MessagesModel, on_delete=models.CASCADE, related_name="replies_sent"
     )
     reply_to = models.ForeignKey(

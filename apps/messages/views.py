@@ -1,3 +1,15 @@
 from django.shortcuts import render
-
-# Create your views here.
+from .serializers import (
+    ModelSerializer,
+    MessageForwardSerializer,
+    MessageEditSerializer,
+    MessageHashtagSerializer,
+    MessageLinkSerializer,
+    MessageMetadataSerializer,
+    MessageReactionSerializer,
+    MessageReplaysSerializer,
+    MessagesSerializer,
+    MessageStatusSerializer,
+    MessagesTypeSerializer,
+)
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView

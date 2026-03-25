@@ -4,6 +4,8 @@ from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.exceptions import ValidationError
 from channels.db import database_sync_to_async
 from apps.user.models import UserModel
+from apps.auth.models import UserSessionModel
+from core.enum.enum import UserSessionStatus
 
 
 @database_sync_to_async
@@ -12,22 +14,42 @@ def get_user_by_id(user_id):
     return user
 
 
+@database_sync_to_async
+def get_session(session_id):
+    try:
+        session: UserSessionModel = UserSessionModel.objects.get(
+            id=session_id, status=UserSessionStatus.ACTIVE
+        )
+        print(session)
+    except UserSessionModel.DoesNotExist:
+        raise ValidationError({"detail": "session not active"})
+
+
 class AuthMiddleware(BaseMiddleware):
-    def validate_token(self, token):
+
+    async def validate_token(self, token):
         try:
             token = AccessToken(token)
-            return token.get("user_id")
 
         except:
             raise ValidationError("token not valid")
+
+        session_id: str = token.get("session_id")
+        if not session_id:
+            raise ValidationError("session not valid")
+        await get_session(session_id)
+        return token.get("user_id")
 
     async def __call__(self, scope, receive, send):
         query_string = parse_qs(scope.get("query_string").decode())
         token = query_string.get("token")[0]
 
-        user_id = self.validate_token(token)
+        user_id = await self.validate_token(token)
         user = await get_user_by_id(user_id=user_id)
 
         scope["user"] = user
 
         return await super().__call__(scope, receive, send)
+
+    # error
+    # front
