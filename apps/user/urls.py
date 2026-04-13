@@ -3,12 +3,14 @@ from django.urls import path
 from .views import (
     ListCreateBlockUserAPI,
     ListCreateContactUserAPI,
-    UpdateContactAPI,
+    RetrieveUpdateContactAPI,
     UserCreateAPI,
     UserPrivatyAPI,
     UserProfileAPI,
     UserSettingsAPI,
     GetUserAPI,
+    SearchUserByName,
+    SearchContactsUserByName,
 )
 
 urlpatterns = [
@@ -24,5 +26,8 @@ urlpatterns = [
     path("list_block_user/", ListCreateBlockUserAPI.as_view()),
     path("create_contact/", ListCreateContactUserAPI.as_view()),
     path("list_contacts/", ListCreateContactUserAPI.as_view()),
-    path("update_contact/<int:pk>/", UpdateContactAPI.as_view()),
+    path("update_contact/<int:pk>/", RetrieveUpdateContactAPI.as_view()),
+    path("get_contact/<int:pk>/", RetrieveUpdateContactAPI.as_view()),
+    path("search_by_username/<str:username>/", SearchUserByName.as_view()),
+    path("search_by_contacts/<str:username>/", SearchContactsUserByName.as_view()),
 ]

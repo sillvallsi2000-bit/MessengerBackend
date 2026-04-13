@@ -6,6 +6,8 @@ from channels.db import database_sync_to_async
 from apps.user.models import UserModel
 from apps.auth.models import UserSessionModel
 from core.enum.enum import UserSessionStatus
+from channels.exceptions import DenyConnection
+import json
 
 
 @database_sync_to_async
@@ -41,13 +43,21 @@ class AuthMiddleware(BaseMiddleware):
         return token.get("user_id")
 
     async def __call__(self, scope, receive, send):
-        query_string = parse_qs(scope.get("query_string").decode())
-        token = query_string.get("token")[0]
+        try:
+            query_string = parse_qs(scope.get("query_string").decode())
+            token = query_string.get("token")[0]
 
-        user_id = await self.validate_token(token)
-        user = await get_user_by_id(user_id=user_id)
+            user_id = await self.validate_token(token)
+            user = await get_user_by_id(user_id=user_id)
 
-        scope["user"] = user
+            scope["user"] = user
+
+        except ValidationError as e:
+            await send({"type": "websocket.accept"})
+            await send(
+                {"type": "websocket.send", "text": json.dumps({"error": e.detail})}
+            )
+            return
 
         return await super().__call__(scope, receive, send)
 

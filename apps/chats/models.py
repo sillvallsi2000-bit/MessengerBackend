@@ -26,7 +26,9 @@ class ChatModel(models.Model):
     class Meta:
         db_table = "chats"
 
-    name = models.CharField(max_length=50, null=True)
+    name = models.CharField(
+        max_length=50,
+    )
     is_active = models.BooleanField(default=True)
     owner = models.ForeignKey(UserModel, on_delete=models.CASCADE, related_name="chat")
     chat_type = models.ForeignKey(ChatTypesModel, on_delete=models.CASCADE)

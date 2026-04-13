@@ -20,22 +20,21 @@ from core.dataclass.dataclass import (
     ChatDataclass,
 )
 
+from apps.user.models import ProfileUserModel
 from core.enum.enum import ChatTypesChoice
 from rest_framework.exceptions import PermissionDenied
 from core.services.chat_service import create_role, update_role
 from core.services.chat_service import generate_invite_url
 
 from rest_framework.permissions import IsAuthenticated
-
-
-class ChatSerializer(ModelSerializer):
-    class Meta:
-        model = ChatModel
-        fields = ("id", "owner", "avatar", "last_message", "last_activity", "chat_type")
-        read_only_fields = ("last_message", "last_activity", "owner", "chat_type")
+from apps.user.serializers import UserProfileSerializer
+from django.shortcuts import get_object_or_404
+from apps.user.serializers import UserSerializer
 
 
 class ChatMembersSerializer(ModelSerializer):
+    user = UserSerializer(read_only=True)
+
     class Meta:
         model = ChatMembersModel
         fields = (
@@ -80,7 +79,38 @@ class ChatMembersRoleSerializer(ModelSerializer):
 class ChatTypesSerializer(ModelSerializer):
     class Meta:
         model = ChatTypesModel
-        fields = ("__all__",)
+        fields = "__all__"
+
+
+class ChatSerializer(ModelSerializer):
+    member = ChatMembersSerializer(read_only=True, many=True)
+    chat_type = ChatTypesSerializer(read_only=True)
+    name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ChatModel
+        fields = (
+            "id",
+            "owner",
+            "avatar",
+            "last_message",
+            "last_activity",
+            "chat_type",
+            "member",
+            "name",
+        )
+        read_only_fields = ("last_message", "last_activity", "owner", "chat_type")
+
+    def get_name(self, obj):
+        request = self.context.get("request")
+        if not request:
+            return None
+
+        other_member = obj.member.exclude(user=request.user).first()
+        if other_member:
+            return other_member.user.username
+
+        return getattr(obj, "name", None)
 
 
 class ChatBannedUserSerializer(ModelSerializer):
@@ -141,9 +171,10 @@ class ChatDirectSerializer(ChatSerializer):
     member = serializers.PrimaryKeyRelatedField(
         queryset=UserModel.objects.all(), write_only=True
     )
+    profile = serializers.SerializerMethodField()
 
     class Meta(ChatSerializer.Meta):
-        fields = ChatSerializer.Meta.fields + ("member",)
+        fields = ChatSerializer.Meta.fields + ("member", "profile")
 
     def create(self, validated_data):
         member: ChatMembersDataclass = validated_data.pop("member")
@@ -151,6 +182,14 @@ class ChatDirectSerializer(ChatSerializer):
         chat: ChatDataclass = get_or_create_chat(owner=user, target_user=member)
         chat_settings, created = ChatSettingsModel.objects.get_or_create(chat=chat)
         return chat
+
+    def get_profile(self, obj):
+        request_user = self.context["request"].user
+
+        target = obj.member.exclude(user=request_user).first()
+        profile = ProfileUserModel.objects.filter(user=target.user).first()
+
+        return UserProfileSerializer(profile).data
 
 
 class ChatGroupSerializer(ChatSerializer):

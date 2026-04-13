@@ -27,6 +27,7 @@ from .serializers import (
     UserSerializer,
     UserSettingsSerializer,
 )
+from apps.user.models import ProfileUserModel
 
 
 class UserCreateAPI(CreateAPIView):
@@ -76,13 +77,12 @@ class ListCreateContactUserAPI(ListCreateAPIView):
         serializer.save(user=self.request.user)
 
 
-class UpdateContactAPI(RetrieveUpdateDestroyAPIView):
+class RetrieveUpdateContactAPI(RetrieveUpdateDestroyAPIView):
     serializer_class = ContactsUserSerializers
     permission_classes: tuple[type[IsAuthenticated]] = (IsAuthenticated,)
 
-    def get_object(self, **kwargs) -> UserContactsModel:
-        pk = self.kwargs.get("pk")
-        return get_object_or_404(UserContactsModel, contact_user=pk)
+    def get_queryset(self):
+        return UserContactsModel.objects.filter(user=self.request.user)
 
 
 class ListCreateBlockUserAPI(ListCreateAPIView):
@@ -95,3 +95,30 @@ class ListCreateBlockUserAPI(ListCreateAPIView):
 
     def perform_create(self, serializer):
         return serializer.save(user=self.request.user)
+
+
+class SearchContactsUserByName(RetrieveAPIView):
+    serializer_class = UserProfileSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_object(self):
+        user = self.request.user
+        target_username = self.kwargs["username"]
+        contacts = UserContactsModel.objects.filter(
+            user=user, contact_user__profile__username=target_username
+        ).first()
+        if not contacts:
+            raise ValidationError({"detail": "not a contact"})
+        return contacts.contact_user.profile
+
+
+class SearchUserByName(RetrieveAPIView):
+    serializer_class = UserSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_object(self):
+        target_username = self.kwargs["username"]
+        try:
+            return UserModel.objects.get(username=target_username)
+        except UserModel.DoesNotExist:
+            raise ValidationError({"detail": "not a contact"})

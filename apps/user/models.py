@@ -12,6 +12,10 @@ class UserModel(AbstractBaseUser, PermissionsMixin):
 
     email = models.EmailField(unique=True)
     password = models.CharField(max_length=128)
+    username = models.CharField(
+        max_length=30,
+        unique=True,
+    )
     is_active = models.BooleanField(default=True)
     is_verificate = models.BooleanField(default=False)
 
@@ -31,7 +35,6 @@ class ProfileUserModel(models.Model):
         blank=True,
         related_name="profile",
     )
-    username = models.CharField(max_length=30, unique=True, null=True, blank=True)
     birthday = models.DateField(null=True, blank=True)
     bio = models.CharField(max_length=250, null=True, blank=True)
     avatar = models.ImageField(upload_to="avatar", null=True, blank=True)

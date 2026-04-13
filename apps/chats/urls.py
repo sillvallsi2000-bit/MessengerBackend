@@ -14,7 +14,9 @@ from .views import (
     UpdateGroupSettingsAPI,
     InviteMemberAPI,
     JoinToChatAPI,
-    
+    DestroyDirectChatAPI,
+    ChatRetrieveAPI,
+    ListAllChatsAPI,
 )
 
 # fmt: off
@@ -26,7 +28,12 @@ urlpatterns = [
     path("list_chat/", ListCreateDirectChatAPI.as_view()),
     path("get_me_info/<int:chat_id>/", GetMeInfoAPI.as_view()),
     path("update_settings/chat/<int:chat_id>/", UpdateChatSettingsAPI.as_view()),
-    path("update_settings_group/chat/<int:chat_id>/", UpdateGroupSettingsAPI.as_view())
+    path("update_settings_group/chat/<int:chat_id>/", UpdateGroupSettingsAPI.as_view()),
+    path("destroy_chat/<int:pk>/", DestroyDirectChatAPI.as_view()),
+    path("get_chat/<int:pk>/", ChatRetrieveAPI.as_view()),
+    path("list_all_chat/", ListAllChatsAPI.as_view())
+
+
 
 
     ,
@@ -41,6 +48,7 @@ urlpatterns = [
     path(
         "update_member/<int:chat_id>/", UpdateMembersAPI.as_view()
     ),
+
     # change_ two step
 
 
