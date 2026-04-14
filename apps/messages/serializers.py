@@ -143,31 +143,15 @@ class MessageReplaysSerializer(ModelSerializer):
 
 
 class CreateMessageSerializer(Serializer):
-    user_id = serializers.PrimaryKeyRelatedField(queryset=UserModel.objects.all())
-    chat_id = serializers.PrimaryKeyRelatedField(
-        queryset=ChatModel.objects.all(), required=False
+    chat = serializers.PrimaryKeyRelatedField(
+        queryset=ChatModel.objects.all(), required=True
     )
     message_type = serializers.PrimaryKeyRelatedField(
         queryset=MessagesTypeModel.objects.all()
     )
     message = serializers.CharField()
 
-    def validate(self, attrs):
-        chat_id = attrs.get("chat_id")
-        user_id = attrs.get("user_id")
-        if chat_id:
-            return attrs
-
-        sender = self.context["sender"]
-        chat = get_or_create_chat(owner=sender, target_user=user_id)
-        attrs["chat_id"] = chat.id
-        return attrs
-
     def create(self, validated_data):
-        print("ok")
-        data = validated_data.pop("user_id", None)
         sender = self.context["sender"]
-        print(validated_data)
-
         message = MessagesModel.objects.create(**validated_data, sender=sender)
         return message
