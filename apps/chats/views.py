@@ -12,8 +12,6 @@ from rest_framework import status
 from .models import (
     ChatModel,
     ChatMembersModel,
-    ChatMembersRoleModel,
-    UserModel,
     ChatSettingsModel,
     ChatInvitationModel,
 )
@@ -35,8 +33,7 @@ from .serializers import (
     ChatSerializer,
 )
 
-from apps.user.serializers import UserSerializer
-from core.dataclass.dataclass import ChatMembersDataclass
+from core.dataclass.dataclass import ChatMembersDataclass, ChatDataclass
 from rest_framework.response import Response
 from core.permission.chat_permission import ManageRolePermission
 from rest_framework.exceptions import ValidationError
@@ -255,9 +252,19 @@ class JoinToChatAPI(GenericAPIView):
 class ChatRetrieveAPI(RetrieveAPIView):
     serializer_class = ChatSerializer
 
-    def get_queryset(self):
+    def get_object(self):
         user = self.request.user
-        return ChatModel.objects.all()
+        target_user_id = self.kwargs.get("pk")
+        chat = (
+            ChatModel.objects.filter(member__user=user)
+            .filter(member__user__id=target_user_id)
+            .first()
+        )
+
+        if not chat:
+            raise ValidationError({"detail"})
+
+        return chat
 
 
 class ListAllChatsAPI(ListCreateAPIView):

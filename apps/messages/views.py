@@ -34,7 +34,6 @@ class CreateMessageAPI(CreateAPIView):
 
     def post(self, *args, **kwargs):
         data = self.request.data
-        user = self.request.user
         serializer = self.get_serializer(
             data=data, context={"sender": self.request.user}
         )

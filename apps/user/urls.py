@@ -11,12 +11,16 @@ from .views import (
     GetUserAPI,
     SearchUserByName,
     SearchContactsUserByName,
+    RetrieveUserByIdAPI,
+    ListUserAPI,
+    UserUpdateAPI,
 )
 
 urlpatterns = [
     path("create_user/", UserCreateAPI.as_view()),
     path("get_profile/", UserProfileAPI.as_view()),
     path("get_me/", GetUserAPI.as_view()),
+    path("update_user/", UserUpdateAPI.as_view()),
     path("update_profile/", UserProfileAPI.as_view()),
     path("get_user_settings/", UserSettingsAPI.as_view()),
     path("update_user_settings/", UserSettingsAPI.as_view()),
@@ -30,4 +34,6 @@ urlpatterns = [
     path("get_contact/<int:pk>/", RetrieveUpdateContactAPI.as_view()),
     path("search_by_username/<str:username>/", SearchUserByName.as_view()),
     path("search_by_contacts/<str:username>/", SearchContactsUserByName.as_view()),
+    path("get_user_by_id/<int:pk>/", RetrieveUserByIdAPI.as_view()),
+    path("list_user/", ListUserAPI.as_view()),
 ]

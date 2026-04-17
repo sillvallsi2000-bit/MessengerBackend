@@ -6,6 +6,7 @@ from rest_framework.generics import (
     RetrieveUpdateAPIView,
     RetrieveUpdateDestroyAPIView,
     RetrieveAPIView,
+    ListAPIView,
 )
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.serializers import ValidationError
@@ -28,6 +29,7 @@ from .serializers import (
     UserSettingsSerializer,
 )
 from apps.user.models import ProfileUserModel
+from apps.chats.models import ChatModel
 
 
 class UserCreateAPI(CreateAPIView):
@@ -35,6 +37,13 @@ class UserCreateAPI(CreateAPIView):
 
 
 class GetUserAPI(RetrieveAPIView):
+    serializer_class = UserSerializer
+
+    def get_object(self):
+        return self.request.user
+
+
+class UserUpdateAPI(RetrieveUpdateAPIView):
     serializer_class = UserSerializer
 
     def get_object(self):
@@ -122,3 +131,26 @@ class SearchUserByName(RetrieveAPIView):
             return UserModel.objects.get(username=target_username)
         except UserModel.DoesNotExist:
             raise ValidationError({"detail": "not a contact"})
+
+
+class RetrieveUserByIdAPI(RetrieveAPIView):
+    serializer_class = UserSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_object(self):
+        target_user_id = self.kwargs.get("pk")
+        return UserModel.objects.get(id=target_user_id)
+
+
+class ListUserAPI(ListAPIView):
+    serializer_class = UserSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        user = self.request.user
+
+        return (
+            UserModel.objects.filter(member__chat__member__user=user)
+            .exclude(id=user.id)
+            .distinct()
+        )

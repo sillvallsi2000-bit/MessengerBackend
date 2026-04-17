@@ -108,6 +108,7 @@ class UserSerializer(ModelSerializer):
         profile_data = validated_data.pop("profile", None)
 
         instance.email = validated_data.get("email", instance.email)
+        instance.username = validated_data.get("username", instance.username)
         instance.save()
 
         if profile_data:
