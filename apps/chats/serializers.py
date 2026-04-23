@@ -31,6 +31,8 @@ from apps.user.serializers import UserProfileSerializer
 from django.shortcuts import get_object_or_404
 from apps.user.serializers import UserSerializer
 
+from apps.messages.serializers import MessagesSerializer
+
 
 class ChatMembersSerializer(ModelSerializer):
     user = UserSerializer(read_only=True)
@@ -103,14 +105,18 @@ class ChatSerializer(ModelSerializer):
 
     def get_name(self, obj):
         request = self.context.get("request")
-        if not request:
-            return None
+        if obj.chat_type.name == "group":
+            return obj.name
 
-        other_member = obj.member.exclude(user=request.user).first()
-        if other_member:
-            return other_member.user.username
+        if obj.chat_type.name == "direct":
+            if not request or not request.user:
+                return obj.name
 
-        return getattr(obj, "name", None)
+            other_member = obj.member.exclude(user=request.user).first()
+            if other_member:
+                return other_member.user.username
+
+        return obj.name
 
 
 class ChatBannedUserSerializer(ModelSerializer):
@@ -193,6 +199,8 @@ class ChatDirectSerializer(ChatSerializer):
 
 
 class ChatGroupSerializer(ChatSerializer):
+    name = serializers.CharField(required=True, min_length=1)
+
     class Meta(ChatSerializer.Meta):
         fields = ChatSerializer.Meta.fields + ("name",)
         extra_kwargs = {"name": {"required": True}}
@@ -338,3 +346,8 @@ class InviteUrlSerializer(ChatInvitationSerializer):
         validated_data["invite_url"] = generate_invite_url()
 
         return ChatInvitationModel.objects.create(**validated_data)
+
+
+class SearchAllSerializer(Serializer):
+    users = UserSerializer(read_only=True, many=True)
+    messeges = MessagesSerializer(read_only=True, many=True)

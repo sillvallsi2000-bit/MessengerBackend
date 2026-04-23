@@ -36,8 +36,14 @@ def get_or_create_chat(owner: UserDataclass, target_user: UserDataclass) -> Chat
 
 def create_group_channel(user: UserDataclass, data: dict[str, Any], name) -> ChatModel:
     chat_type = ChatTypesModel.objects.get(name=name)
+    group_name = data.get("name")
+    if not group_name or not group_name.strip():
+        raise ValueError("empty name")
+
+    chat_type = ChatTypesModel.objects.get(name=name)
+
     new_group = ChatModel.objects.create(
-        name=data.get("name", "chat"),
+        name=group_name.strip(),
         owner=user,
         chat_type=chat_type,
     )

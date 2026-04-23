@@ -14,6 +14,7 @@ from .views import (
     RetrieveUserByIdAPI,
     ListUserAPI,
     UserUpdateAPI,
+    UnblockUserAPI,
 )
 
 urlpatterns = [
@@ -27,6 +28,7 @@ urlpatterns = [
     path("get_user_privaty/", UserPrivatyAPI.as_view()),
     path("update_user_privaty/", UserPrivatyAPI.as_view()),
     path("block_user/", ListCreateBlockUserAPI.as_view()),
+    path("unblock/<int:blocked_user_id>/", UnblockUserAPI.as_view()),
     path("list_block_user/", ListCreateBlockUserAPI.as_view()),
     path("create_contact/", ListCreateContactUserAPI.as_view()),
     path("list_contacts/", ListCreateContactUserAPI.as_view()),

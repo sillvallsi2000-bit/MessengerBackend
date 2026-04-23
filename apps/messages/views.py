@@ -51,7 +51,6 @@ class ListAllMessageAPI(ListAPIView):
         chat_id = self.kwargs.get("chat_id")
 
         chat = ChatModel.objects.filter(id=chat_id).first()
-
         if not chat:
             raise PermissionDenied("Chat not found")
 

@@ -17,6 +17,8 @@ from .views import (
     DestroyDirectChatAPI,
     ChatRetrieveAPI,
     ListAllChatsAPI,
+    SearchAllAPI,
+    GroupRetrieveAPI,
 )
 
 # fmt: off
@@ -31,7 +33,11 @@ urlpatterns = [
     path("update_settings_group/chat/<int:chat_id>/", UpdateGroupSettingsAPI.as_view()),
     path("destroy_chat/<int:pk>/", DestroyDirectChatAPI.as_view()),
     path("get_chat/<int:pk>/", ChatRetrieveAPI.as_view()),
-    path("list_all_chat/", ListAllChatsAPI.as_view())
+    path("list_all_chat/", ListAllChatsAPI.as_view()),
+    path("search_all/", SearchAllAPI.as_view()),
+    path("get_group/<int:pk>/", GroupRetrieveAPI.as_view())
+
+
 
 
 

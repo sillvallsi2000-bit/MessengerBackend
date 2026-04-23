@@ -23,6 +23,7 @@ from apps.chats.models import ChatModel
 from .models import MessagesTypeModel
 
 from core.services.chat_service import get_or_create_chat
+from apps.user.serializers import UserSerializer
 
 
 class MessagesTypeSerializer(ModelSerializer):
@@ -46,6 +47,8 @@ class MessageStatusSerializer(ModelSerializer):
 
 
 class MessagesSerializer(ModelSerializer):
+    target_id = serializers.SerializerMethodField()
+
     class Meta:
         model = MessagesModel
         fields = (
@@ -58,7 +61,16 @@ class MessagesSerializer(ModelSerializer):
             "is_pined",
             "create_at",
             "update_at",
+            "target_id",
         )
+
+    def get_target_id(self, obj):
+        request = self.context.get("request")
+        if not request:
+            return None
+        chat = obj.chat
+        other_member = chat.member.exclude(user=request.user).first()
+        return other_member.user.id
 
 
 class MessageMetadataSerializer(ModelSerializer):
@@ -153,5 +165,7 @@ class CreateMessageSerializer(Serializer):
 
     def create(self, validated_data):
         sender = self.context["sender"]
+        print(validated_data)
+
         message = MessagesModel.objects.create(**validated_data, sender=sender)
         return message

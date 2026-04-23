@@ -6,6 +6,7 @@ from rest_framework.generics import (
     DestroyAPIView,
     RetrieveAPIView,
     UpdateAPIView,
+    ListAPIView,
 )
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
@@ -31,6 +32,7 @@ from .serializers import (
     ChatInvitationSerializer,
     InviteUrlSerializer,
     ChatSerializer,
+    SearchAllSerializer,
 )
 
 from core.dataclass.dataclass import ChatMembersDataclass, ChatDataclass
@@ -38,6 +40,9 @@ from rest_framework.response import Response
 from core.permission.chat_permission import ManageRolePermission
 from rest_framework.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
+
+from apps.user.models import UserModel
+from apps.messages.models import MessagesModel
 
 
 class ListCreateDirectChatAPI(ListCreateAPIView):
@@ -267,12 +272,39 @@ class ChatRetrieveAPI(RetrieveAPIView):
         return chat
 
 
+class GroupRetrieveAPI(RetrieveAPIView):
+    serializer_class = ChatGroupSerializer
+
+    def get_object(self):
+        id = self.kwargs["pk"]
+        user = self.request.user
+        chat = ChatModel.objects.filter(member__user=user, id=id)
+        return get_object_or_404(chat)
+
+
 class ListAllChatsAPI(ListCreateAPIView):
     serializer_class = ChatSerializer
 
     def get_queryset(self):
         user = self.request.user
         return ChatModel.objects.all()
+
+
+class SearchAllAPI(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        query = request.query_params.get("q", "")
+        user = self.request.user
+        users = UserModel.objects.filter(username__icontains=query).distinct()
+        messages = MessagesModel.objects.filter(message=query).distinct()
+
+        data = SearchAllSerializer(
+            {"users": users, "messeges": messages},
+            context={"request": request},
+        ).data
+
+        return Response(data)
 
 
 # chat type all obj,

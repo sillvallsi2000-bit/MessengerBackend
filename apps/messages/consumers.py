@@ -20,16 +20,3 @@ class MessageConsumers(GenericAsyncAPIConsumer):
         await self.send(
             text_data=json.dumps({"type": "message", "data": event["message"]})
         )
-
-    # async def send_user(self, event):
-    #     await self.send_json(event)
-
-    # @database_sync_to_async
-    # def user_is_online(self):
-    #     self.user.status.is_online = True
-    #     self.user.status.save()
-
-    # @database_sync_to_async
-    # def user_is_ofline(self):
-    #     self.user.status.is_online = False
-    #     self.user.status.save()

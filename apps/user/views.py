@@ -7,6 +7,7 @@ from rest_framework.generics import (
     RetrieveUpdateDestroyAPIView,
     RetrieveAPIView,
     ListAPIView,
+    DestroyAPIView,
 )
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.serializers import ValidationError
@@ -104,6 +105,17 @@ class ListCreateBlockUserAPI(ListCreateAPIView):
 
     def perform_create(self, serializer):
         return serializer.save(user=self.request.user)
+
+
+class UnblockUserAPI(DestroyAPIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get_object(self):
+        return get_object_or_404(
+            BlockUserModel,
+            user=self.request.user,
+            blocked_user=self.kwargs["blocked_user_id"],
+        )
 
 
 class SearchContactsUserByName(RetrieveAPIView):
