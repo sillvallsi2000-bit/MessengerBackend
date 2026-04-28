@@ -90,6 +90,7 @@ class ChatSerializer(ModelSerializer):
     chat_type = ChatTypesSerializer(read_only=True)
     name = serializers.SerializerMethodField()
     # count = serializers.SerializerMethodField()
+    last_message = MessagesSerializer(read_only=True)
 
     class Meta:
         model = ChatModel

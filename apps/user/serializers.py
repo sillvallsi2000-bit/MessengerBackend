@@ -58,6 +58,7 @@ class UserPrivatySerializer(ModelSerializer):
 
 
 class UserProfileSerializer(ModelSerializer):
+    avatar = serializers.ImageField(required=False)
 
     class Meta:
         model = ProfileUserModel

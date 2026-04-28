@@ -31,6 +31,7 @@ from .serializers import (
 )
 from apps.user.models import ProfileUserModel
 from apps.chats.models import ChatModel
+from rest_framework.parsers import MultiPartParser, FormParser
 
 
 class UserCreateAPI(CreateAPIView):

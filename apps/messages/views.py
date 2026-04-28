@@ -41,7 +41,7 @@ class CreateMessageAPI(CreateAPIView):
         serializer.is_valid(raise_exception=True)
         message = serializer.save()
         ChatModel.objects.filter(id=message.chat_id).update(
-            last_activity=now(), last_message=message.id
+            last_activity=now(), last_message_id=message.id
         )
 
         return Response(MessagesSerializer(message).data)

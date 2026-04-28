@@ -9,7 +9,7 @@ class MessagesTypeModel(models.Model):
         db_table = "messages_type"
 
     name = models.CharField(max_length=100)
-    description = models.CharField(max_length=100)
+    description = models.CharField(max_length=100, null=True, blank=True)
     code = models.CharField(
         max_length=20,
         choices=MessageTypeChoices.choices,

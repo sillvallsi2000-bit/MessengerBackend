@@ -35,7 +35,13 @@ class ChatModel(models.Model):
     avatar = models.ImageField(upload_to="avatar", null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    last_message = models.IntegerField(default=0)
+    last_message = models.ForeignKey(
+        "messages.MessagesModel",
+        on_delete=models.CASCADE,
+        related_name="last_message_for_chats",
+        null=True,
+        blank=True,
+    )
     last_activity = models.DateTimeField(blank=True, null=True)
 
 
