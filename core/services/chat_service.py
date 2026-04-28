@@ -6,9 +6,10 @@ from apps.chats.models import (
 )
 from core.enum.enum import ChatTypesChoice, RoleMembersChoice
 from core.dataclass.dataclass import UserDataclass
-
+from core.dataclass.dataclass import ChatDataclass
 from typing import Any
-
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 import secrets
 
 from apps.chats.models import ChatMembersRoleModel, ChatModel
@@ -93,3 +94,14 @@ def update_role(target_user: UserDataclass, chat_id: int, data):
 
 def generate_invite_url():
     return secrets.token_urlsafe(16)
+
+
+def getUsersFromChat(chat: ChatDataclass):
+    chat_member = ChatMembersModel.objects.filter(chat=chat)
+    chat_user_ids = [member.user_id for member in chat_member]
+    print(chat_user_ids)
+    channel_layer = get_channel_layer()
+    for user_id in chat_user_ids:
+        async_to_sync(channel_layer.group_send)(
+            f"chat_{user_id}", {"type": "chat_update", "data": "reload"}
+        )

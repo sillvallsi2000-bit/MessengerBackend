@@ -9,7 +9,6 @@ from .models import ChatMembersModel
 
 @receiver(post_save, sender=ChatMembersModel)
 def create_chat(sender, instance, created, **kwargs):
-    print("ok")
     if created:
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(

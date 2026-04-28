@@ -22,7 +22,6 @@ def get_session(session_id):
         session: UserSessionModel = UserSessionModel.objects.get(
             id=session_id, status=UserSessionStatus.ACTIVE
         )
-        print(session)
     except UserSessionModel.DoesNotExist:
         raise ValidationError({"detail": "session not active"})
 

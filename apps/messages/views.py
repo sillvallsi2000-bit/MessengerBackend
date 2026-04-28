@@ -40,7 +40,7 @@ class CreateMessageAPI(CreateAPIView):
         )
         serializer.is_valid(raise_exception=True)
         message = serializer.save()
-        ChatModel.objects.filter(id=message.chat_id).update(
+        chat = ChatModel.objects.filter(id=message.chat_id).update(
             last_activity=now(), last_message_id=message.id
         )
 
@@ -62,6 +62,3 @@ class ListAllMessageAPI(ListAPIView):
             pass
 
         return MessagesModel.objects.filter(chat=chat)
-
-    # create chat front
-    # mediadata

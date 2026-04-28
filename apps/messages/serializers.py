@@ -19,10 +19,10 @@ from .models import (
 from apps.user.models import UserModel
 from apps.chats.models import ChatModel
 
-
+from django.utils import timezone
 from .models import MessagesTypeModel
 
-from core.services.chat_service import get_or_create_chat
+from core.services.chat_service import getUsersFromChat
 from apps.user.serializers import UserSerializer
 
 
@@ -165,9 +165,10 @@ class CreateMessageSerializer(Serializer):
 
     def create(self, validated_data):
         sender = self.context["sender"]
-
-        print(validated_data)
-
+        chat = validated_data.get("chat")
         message = MessagesModel.objects.create(**validated_data, sender=sender)
-
+        chat.last_message = message
+        chat.last_activity = timezone.now()
+        chat.save()
+        getUsersFromChat(chat)
         return message

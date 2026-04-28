@@ -117,7 +117,6 @@ class UserSerializer(ModelSerializer):
                 setattr(profile, attr, value)
             profile.save()
         instance.save()
-        print(profile_data, "ok")
         return instance
 
 
