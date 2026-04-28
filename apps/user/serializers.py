@@ -80,7 +80,7 @@ class UserStatusSerializer(ModelSerializer):
 
 class UserSerializer(ModelSerializer):
     password = serializers.CharField(write_only=True)
-    profile = UserProfileSerializer(read_only=True)
+    profile = UserProfileSerializer(required=False)
     status = UserStatusSerializer(read_only=True)
 
     class Meta:
@@ -95,7 +95,7 @@ class UserSerializer(ModelSerializer):
             "profile",
             "status",
         )
-        read_only_fields = ("is_active", "is_verificate", "profile", "status")
+        read_only_fields = ("is_active", "is_verificate", "status")
 
     def create(self, validated_data):
         user: UserDataclass = UserModel.objects.create_user(**validated_data)
@@ -109,14 +109,14 @@ class UserSerializer(ModelSerializer):
 
         instance.email = validated_data.get("email", instance.email)
         instance.username = validated_data.get("username", instance.username)
-        instance.save()
 
         if profile_data:
             profile = instance.profile
             for attr, value in profile_data.items():
                 setattr(profile, attr, value)
             profile.save()
-
+        instance.save()
+        print(profile_data, "ok")
         return instance
 
 

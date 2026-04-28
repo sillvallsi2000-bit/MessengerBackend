@@ -35,14 +35,8 @@ urlpatterns = [
     path("get_chat/<int:pk>/", ChatRetrieveAPI.as_view()),
     path("list_all_chat/", ListAllChatsAPI.as_view()),
     path("search_all/", SearchAllAPI.as_view()),
-    path("get_group/<int:pk>/", GroupRetrieveAPI.as_view())
-
-
-
-
-
-
-    ,
+    path("get_group/<int:pk>/", GroupRetrieveAPI.as_view()),
+    
 
     # change
 

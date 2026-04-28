@@ -4,6 +4,7 @@ from .models import MessagesModel
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from .serializers import MessagesSerializer
+from apps.chats.models import ChatMembersModel
 
 
 @receiver(post_save, sender=MessagesModel)

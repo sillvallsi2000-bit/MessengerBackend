@@ -34,6 +34,7 @@ from .serializers import (
     ChatSerializer,
     SearchAllSerializer,
 )
+from django.utils.timezone import now
 
 from core.dataclass.dataclass import ChatMembersDataclass, ChatDataclass
 from rest_framework.response import Response
@@ -42,7 +43,7 @@ from rest_framework.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 
 from apps.user.models import UserModel
-from apps.messages.models import MessagesModel
+from apps.messages.models import MessagesModel, MessageStatusModel
 
 
 class ListCreateDirectChatAPI(ListCreateAPIView):
@@ -269,6 +270,14 @@ class ChatRetrieveAPI(RetrieveAPIView):
         if not chat:
             raise ValidationError({"detail"})
 
+        messages = MessagesModel.objects.filter(chat=chat).exclude(sender=user)
+        for message in messages:
+            MessageStatusModel.objects.update_or_create(
+                message=message,
+                user=user,
+                defaults={"read_at": now(), "status": "read"},
+            )
+
         return chat
 
 
@@ -287,7 +296,11 @@ class ListAllChatsAPI(ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return ChatModel.objects.all()
+        return (
+            ChatModel.objects.filter(member__user=user)
+            .order_by("-last_activity")
+            .distinct()
+        )
 
 
 class SearchAllAPI(GenericAPIView):
@@ -298,13 +311,29 @@ class SearchAllAPI(GenericAPIView):
         user = self.request.user
         users = UserModel.objects.filter(username__icontains=query).distinct()
         messages = MessagesModel.objects.filter(message=query).distinct()
-
+        group = ChatModel.objects.filter(chat_type=2, name=query).distinct()
         data = SearchAllSerializer(
-            {"users": users, "messeges": messages},
+            {"users": users, "messeges": messages, "group": group},
             context={"request": request},
         ).data
 
         return Response(data)
+
+
+# from django.utils import timezone
+
+
+# class MarkAsRead(GenericAPIView):
+#     permission_classes = [IsAuthenticated]
+
+#     def post(self, request, chat_id):
+#         member = ChatMembersModel.objects.filter(
+#             chat_id=chat_id, user=request.user
+#         ).first()
+#         if member:
+#             member.last_read_at = timezone.now()
+#             member.save(update_fields=["last_read_at"])
+#         return Response({"status": "ok"})
 
 
 # chat type all obj,

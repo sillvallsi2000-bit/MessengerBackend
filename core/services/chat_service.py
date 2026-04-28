@@ -12,8 +12,10 @@ from typing import Any
 import secrets
 
 from apps.chats.models import ChatMembersRoleModel, ChatModel
+from django.db.transaction import atomic
 
 
+@atomic
 def get_or_create_chat(owner: UserDataclass, target_user: UserDataclass) -> ChatModel:
     chat = (
         ChatModel.objects.filter(

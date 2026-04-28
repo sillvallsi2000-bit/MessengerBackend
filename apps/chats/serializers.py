@@ -32,6 +32,7 @@ from django.shortcuts import get_object_or_404
 from apps.user.serializers import UserSerializer
 
 from apps.messages.serializers import MessagesSerializer
+from apps.messages.models import MessagesModel
 
 
 class ChatMembersSerializer(ModelSerializer):
@@ -88,6 +89,7 @@ class ChatSerializer(ModelSerializer):
     member = ChatMembersSerializer(read_only=True, many=True)
     chat_type = ChatTypesSerializer(read_only=True)
     name = serializers.SerializerMethodField()
+    # count = serializers.SerializerMethodField()
 
     class Meta:
         model = ChatModel
@@ -117,6 +119,15 @@ class ChatSerializer(ModelSerializer):
                 return other_member.user.username
 
         return obj.name
+
+    # def get_count(self, obj):
+    #     user = self.context["request"].user
+    #     return (
+    #         MessagesModel.objects.filter(chat=obj)
+    #         .exclude(sender=user)
+    #         .exclude(statuses__user=user, statuses__read_at__isnull=False)
+    #         .count()
+    #     )
 
 
 class ChatBannedUserSerializer(ModelSerializer):
@@ -351,3 +362,4 @@ class InviteUrlSerializer(ChatInvitationSerializer):
 class SearchAllSerializer(Serializer):
     users = UserSerializer(read_only=True, many=True)
     messeges = MessagesSerializer(read_only=True, many=True)
+    group = ChatGroupSerializer(read_only=True, many=True)

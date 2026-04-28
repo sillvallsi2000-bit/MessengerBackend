@@ -27,6 +27,7 @@ from apps.chats.models import ChatModel, ChatMembersModel
 
 from django.shortcuts import get_object_or_404
 from rest_framework.exceptions import PermissionDenied
+from django.utils.timezone import now
 
 
 class CreateMessageAPI(CreateAPIView):
@@ -39,6 +40,9 @@ class CreateMessageAPI(CreateAPIView):
         )
         serializer.is_valid(raise_exception=True)
         message = serializer.save()
+        ChatModel.objects.filter(id=message.chat_id).update(
+            last_activity=now(), last_message=message.id
+        )
 
         return Response(MessagesSerializer(message).data)
 

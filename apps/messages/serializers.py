@@ -165,7 +165,9 @@ class CreateMessageSerializer(Serializer):
 
     def create(self, validated_data):
         sender = self.context["sender"]
+
         print(validated_data)
 
         message = MessagesModel.objects.create(**validated_data, sender=sender)
+
         return message
