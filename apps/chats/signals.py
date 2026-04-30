@@ -5,16 +5,14 @@ from asgiref.sync import async_to_sync
 from .serializers import ChatSerializer
 from django.db.models.signals import post_save
 from .models import ChatMembersModel
+from core.services.chat_service import getUsersFromChat
 
 
 @receiver(post_save, sender=ChatMembersModel)
 def create_chat(sender, instance, created, **kwargs):
-    if created:
-        channel_layer = get_channel_layer()
-        async_to_sync(channel_layer.group_send)(
-            f"chat_{instance.user_id}",
-            {"type": "sender", f"message": f"chat create {instance.chat_id}"},
-        )
+    if not created:
+        return
+    getUsersFromChat(instance.chat)
 
 
 # verificate instance owner

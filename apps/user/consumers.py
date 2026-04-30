@@ -10,7 +10,7 @@ class UserConsumer(GenericAsyncAPIConsumer):
         self.user = self.scope["user"]
         self.group_name = "user_status"
         await self.channel_layer.group_add(self.group_name, self.channel_name)
-        self.group_chat = f"my_chat_{self.user_id}"
+        self.group_chat = f"chat_{self.user.id}"
         await self.channel_layer.group_send(
             self.group_name,
             {"type": "send_user", "user_id": self.user.id, "status": True},
@@ -29,6 +29,23 @@ class UserConsumer(GenericAsyncAPIConsumer):
             self.group_name,
             {"type": "send_user", "user_id": self.user.id, "status": False},
         )
+
+    async def send_user(self, event):
+        await self.send_json(event)
+
+    async def chat_update(self, event):
+        await self.send_json({"type": "chat_update", "data": event["data"]})
+
+    @database_sync_to_async
+    def user_is_online(self):
+        self.user.status.is_online = True
+        self.user.status.save()
+
+    @database_sync_to_async
+    def user_is_ofline(self):
+        self.user.status.is_online = False
+        self.user.status.save()
+
         # for i in self.chats:
         #     await self.channel_layer.group_discard(f"chat_{i}", self.channel_name)
 
@@ -41,19 +58,3 @@ class UserConsumer(GenericAsyncAPIConsumer):
     #             await self.channel_layer.group_add(
     #                 f"chat_{i}", channel=self.channel_name
     #             )
-
-    async def send_user(self, event):
-        await self.send_json(event)
-
-    async def update_chat(self, event):
-        await self.send_json({"type": "chat_update", "data": event["data"]})
-
-    @database_sync_to_async
-    def user_is_online(self):
-        self.user.status.is_online = True
-        self.user.status.save()
-
-    @database_sync_to_async
-    def user_is_ofline(self):
-        self.user.status.is_online = False
-        self.user.status.save()
