@@ -1,5 +1,5 @@
 from typing import Any, Dict
-
+import requests
 from rest_framework import serializers
 from rest_framework.request import HttpRequest
 from rest_framework.serializers import ModelSerializer, Serializer, ValidationError
@@ -9,7 +9,9 @@ from apps.user.serializers import UserSerializer
 from core.dataclass.dataclass import DevicesDataclass, SessionDataclass, UserDataclass
 from core.services.auth_service import OperationbyDevice, OperationbyToken
 from core.services.session_service import OperationbySession
+from django.contrib.auth import get_user_model
 
+UserModel = get_user_model()
 from .models import CodeUserModel, UserDeviceModel, UserSessionModel
 
 
@@ -112,3 +114,42 @@ class RefreshSerializer(Serializer):
 
         refresh, access = OperationbyToken.update_token(user=user, session=session)
         return {"access": str(access), "refresh": str(refresh)}
+
+
+class GoogleAuthSerializer(Serializer):
+    idToken = serializers.CharField(write_only=True)
+
+    class Meta(UserDeviceSerializer.Meta):
+        fields = UserDeviceSerializer.Meta.fields + ("idToken",)
+
+    def validate(self, attrs):
+        idToken = attrs.get("idToken")
+
+        url = f"https://oauth2.googleapis.com/tokeninfo?id_token={idToken}"
+        response = requests.get(url)
+
+        if response.status_code != 200:
+            raise serializers.ValidationError("Error")
+
+        google_data = response.json()
+        attrs["google_data"] = google_data
+        return attrs
+
+    def create(self, validated_data):
+        google_data = validated_data.pop("google_data")
+        request = self.context["request"]
+        data = validated_data
+        email = google_data.get("email")
+        username = google_data.get("username")
+        user = UserModel.objects.filter(email=email).first()
+        if not user:
+            user = UserModel.objects.create_user(email=email, username=username)
+
+        device: DevicesDataclass = OperationbyDevice.get_or_create_device(user, request)
+        session: SessionDataclass = OperationbySession.create_session(
+            user=user, device=device, data=data
+        )
+        refresh, access = OperationbyToken.update_token(user=user, session=session)
+
+        self.context["token"] = {"access": str(access), "refresh": str(refresh)}
+        return access, refresh

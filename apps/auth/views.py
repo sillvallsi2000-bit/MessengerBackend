@@ -12,6 +12,7 @@ from .models import CodeUserModel
 from .serializers import (
     CodeSerialiser,
     LoginSerializer,
+    GoogleAuthSerializer,
     RefreshSerializer,
 )
 
@@ -46,3 +47,15 @@ class VerifyCodeAPI(GenericAPIView):
         user.save()
 
         return Response("success", status=status.HTTP_204_NO_CONTENT)
+
+
+class GoogleAuthApi(GenericAPIView):
+    serializer_class = GoogleAuthSerializer
+
+    def post(self, *args, **kwargs):
+        data = self.request.data
+        serializer = self.get_serializer(data=data, context={"request": self.request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        token = serializer.context.get("token", {})
+        return Response(token)
