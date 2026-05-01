@@ -1,6 +1,5 @@
 from typing import Any, Dict
 
-from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.request import HttpRequest
 from rest_framework.serializers import ModelSerializer, Serializer, ValidationError
@@ -9,7 +8,6 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from apps.user.serializers import UserSerializer
 from core.dataclass.dataclass import DevicesDataclass, SessionDataclass, UserDataclass
 from core.services.auth_service import OperationbyDevice, OperationbyToken
-from core.services.email_service import EmailService
 from core.services.session_service import OperationbySession
 
 from .models import CodeUserModel, UserDeviceModel, UserSessionModel

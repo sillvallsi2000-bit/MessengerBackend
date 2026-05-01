@@ -1,9 +1,9 @@
-from django.db import models
-from django.utils import timezone
-
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.db import models
+
+from core.enum.enum import LanguageChoice, ThemeChoice
+
 from .manager import UserManager
-from core.enum.enum import ThemeChoice, LanguageChoice
 
 
 class UserModel(AbstractBaseUser, PermissionsMixin):

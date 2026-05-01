@@ -1,6 +1,5 @@
-from django.db.models import QuerySet
-from django.utils import timezone
-from rest_framework.generics import GenericAPIView, ListAPIView
+from rest_framework import status
+from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -15,7 +14,6 @@ from .serializers import (
     LoginSerializer,
     RefreshSerializer,
 )
-from rest_framework import status
 
 
 class LogApi(TokenObtainPairView):

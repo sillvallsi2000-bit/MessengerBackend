@@ -15,17 +15,12 @@ from core.services.email_service import EmailService
 
 from .models import (
     BlockUserModel,
-    ProfileUserModel,
+    StatusUserModel,
     UserContactsModel,
     UserModel,
     UserPrivatyModel,
     UserSettingsModel,
-    StatusUserModel,
 )
-from core.services.auth_service import OperationbyDevice, OperationbyToken
-from core.services.email_service import EmailService
-from core.services.session_service import OperationbySession
-from rest_framework.request import HttpRequest
 
 
 class UserSettingsSerializer(ModelSerializer):
@@ -43,7 +38,6 @@ class UserSettingsSerializer(ModelSerializer):
 
 
 class UserPrivatySerializer(ModelSerializer):
-
     class Meta:
         model = UserPrivatyModel
         fields = (

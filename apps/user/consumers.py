@@ -1,8 +1,5 @@
-from djangochannelsrestframework.generics import GenericAsyncAPIConsumer
-from apps.user.models import StatusUserModel
 from channels.db import database_sync_to_async
-import json
-from rest_framework.exceptions import ValidationError
+from djangochannelsrestframework.generics import GenericAsyncAPIConsumer
 
 
 class UserConsumer(GenericAsyncAPIConsumer):

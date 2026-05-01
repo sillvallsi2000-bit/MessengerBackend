@@ -1,10 +1,10 @@
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+
 from .models import MessagesModel
-from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync
 from .serializers import MessagesSerializer
-from apps.chats.models import ChatMembersModel
 
 
 @receiver(post_save, sender=MessagesModel)

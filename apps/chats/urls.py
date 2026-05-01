@@ -1,24 +1,25 @@
 from django.urls import path
+
 from .views import (
-    ListCreateDirectChatAPI,
+    AddRoleChatAPI,
+    BanMemberAPI,
+    ChatRetrieveAPI,
+    CreateChannelAPI,
     CreateGroupAPI,
     CreateMembersAPI,
-    AddRoleChatAPI,
-    CreateChannelAPI,
+    DestroyDirectChatAPI,
     DestroyMemberAPI,
     DestroyMemberRoleAPI,
     GetMeInfoAPI,
-    BanMemberAPI,
-    UpdateMembersAPI,
-    UpdateChatSettingsAPI,
-    UpdateGroupSettingsAPI,
+    GroupRetrieveAPI,
     InviteMemberAPI,
     JoinToChatAPI,
-    DestroyDirectChatAPI,
-    ChatRetrieveAPI,
     ListAllChatsAPI,
+    ListCreateDirectChatAPI,
     SearchAllAPI,
-    GroupRetrieveAPI,
+    UpdateChatSettingsAPI,
+    UpdateGroupSettingsAPI,
+    UpdateMembersAPI,
 )
 
 # fmt: off

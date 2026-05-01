@@ -1,49 +1,46 @@
+from django.shortcuts import get_object_or_404
+from django.utils.timezone import now
+from rest_framework import status
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import (
-    ListCreateAPIView,
     CreateAPIView,
-    GenericAPIView,
-    RetrieveUpdateDestroyAPIView,
     DestroyAPIView,
+    GenericAPIView,
+    ListCreateAPIView,
     RetrieveAPIView,
     UpdateAPIView,
-    ListAPIView,
 )
 from rest_framework.permissions import IsAuthenticated
-from rest_framework import status
+from rest_framework.response import Response
+
+from apps.messages.models import MessagesModel, MessageStatusModel
+from apps.user.models import UserModel
+from core.dataclass.dataclass import ChatMembersDataclass
+from core.permission.chat_permission import ManageRolePermission
+
 from .models import (
-    ChatModel,
-    ChatMembersModel,
-    ChatSettingsModel,
     ChatInvitationModel,
+    ChatMembersModel,
+    ChatModel,
+    ChatSettingsModel,
 )
 from .serializers import (
+    AddBanMembersSerializers,
+    AddMembersToChatSerializer,
+    AddRoleSerializer,
+    ChatChannelSerializer,
     ChatDirectSerializer,
     ChatGroupSerializer,
-    ChatChannelSerializer,
-    AddRoleSerializer,
-    AddMembersToChatSerializer,
-    ChatMembersSerializer,
     ChatMembersRoleSerializer,
-    FullMemberSerializer,
-    AddBanMembersSerializers,
-    UpdateRoleSerializer,
-    ChatSettingsSerializer,
-    GroupChatSettinsSerializer,
-    ChatInvitationSerializer,
-    InviteUrlSerializer,
+    ChatMembersSerializer,
     ChatSerializer,
+    ChatSettingsSerializer,
+    FullMemberSerializer,
+    GroupChatSettinsSerializer,
+    InviteUrlSerializer,
     SearchAllSerializer,
+    UpdateRoleSerializer,
 )
-from django.utils.timezone import now
-
-from core.dataclass.dataclass import ChatMembersDataclass, ChatDataclass
-from rest_framework.response import Response
-from core.permission.chat_permission import ManageRolePermission
-from rest_framework.exceptions import ValidationError
-from django.shortcuts import get_object_or_404
-
-from apps.user.models import UserModel
-from apps.messages.models import MessagesModel, MessageStatusModel
 
 
 class ListCreateDirectChatAPI(ListCreateAPIView):
@@ -308,7 +305,6 @@ class SearchAllAPI(GenericAPIView):
 
     def get(self, request):
         query = request.query_params.get("q", "")
-        user = self.request.user
         users = UserModel.objects.filter(username__icontains=query).distinct()
         messages = MessagesModel.objects.filter(message=query).distinct()
         group = ChatModel.objects.filter(chat_type=2, name=query).distinct()

@@ -1,7 +1,8 @@
 from datetime import timedelta
-from typing import Any, Optional, Tuple
+from typing import Any
 
 from django.utils import timezone
+from rest_framework.request import HttpRequest
 from rest_framework.serializers import ValidationError
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import AccessToken
@@ -9,9 +10,6 @@ from rest_framework_simplejwt.tokens import AccessToken
 from apps.auth.models import UserSessionModel
 from core.dataclass.dataclass import DevicesDataclass, SessionDataclass, UserDataclass
 from core.enum.enum import UserSessionStatus
-
-from rest_framework.request import HttpRequest
-from core.dataclass.dataclass import UserDataclass, SessionDataclass
 
 
 class SessionAccessToken(AccessToken):

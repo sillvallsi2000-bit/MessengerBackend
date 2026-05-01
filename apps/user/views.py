@@ -2,24 +2,26 @@ from django.db.models import QuerySet
 from django.shortcuts import get_object_or_404
 from rest_framework.generics import (
     CreateAPIView,
+    DestroyAPIView,
+    ListAPIView,
     ListCreateAPIView,
+    RetrieveAPIView,
     RetrieveUpdateAPIView,
     RetrieveUpdateDestroyAPIView,
-    RetrieveAPIView,
-    ListAPIView,
-    DestroyAPIView,
 )
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.serializers import ValidationError
 
+from apps.user.models import ProfileUserModel
 
 from .models import (
     BlockUserModel,
-    UserContactsModel,
     ProfileUserModel,
-    UserSettingsModel,
-    UserPrivatyModel,
+    UserContactsModel,
     UserModel,
+    UserPrivatyModel,
+    UserSettingsModel,
 )
 from .serializers import (
     BlockedUserSerializer,
@@ -29,9 +31,6 @@ from .serializers import (
     UserSerializer,
     UserSettingsSerializer,
 )
-from apps.user.models import ProfileUserModel
-from apps.chats.models import ChatModel
-from rest_framework.parsers import MultiPartParser, FormParser
 
 
 class UserCreateAPI(CreateAPIView):
@@ -56,6 +55,7 @@ class UserUpdateAPI(RetrieveUpdateAPIView):
 class UserProfileAPI(RetrieveUpdateAPIView):
     serializer_class = UserProfileSerializer
     permission_classes = (IsAuthenticated,)
+    parser_classes = (MultiPartParser, FormParser)
 
     def get_object(self) -> ProfileUserModel:
         return self.request.user.profile

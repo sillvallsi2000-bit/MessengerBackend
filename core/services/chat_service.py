@@ -11,7 +11,6 @@ from typing import Any
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 import secrets
-
 from apps.chats.models import ChatMembersRoleModel, ChatModel
 from django.db.transaction import atomic
 

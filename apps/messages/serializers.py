@@ -1,12 +1,11 @@
-from typing import Any, Dict
-
+from django.utils import timezone
 from rest_framework import serializers
-from rest_framework.request import Request
-from rest_framework.serializers import ModelSerializer, ValidationError, Serializer
+from rest_framework.serializers import ModelSerializer, Serializer
+
+from apps.chats.models import ChatModel
+from core.services.chat_service import getUsersFromChat
+
 from .models import (
-    MessagesTypeModel,
-    MessageStatusModel,
-    MessagesModel,
     MessageEditModel,
     MessageForwardModel,
     MessageHashtagModel,
@@ -14,16 +13,10 @@ from .models import (
     MessageMetadataModel,
     MessageReactionModel,
     MessageReplaysModel,
+    MessagesModel,
+    MessageStatusModel,
+    MessagesTypeModel,
 )
-
-from apps.user.models import UserModel
-from apps.chats.models import ChatModel
-
-from django.utils import timezone
-from .models import MessagesTypeModel
-
-from core.services.chat_service import getUsersFromChat
-from apps.user.serializers import UserSerializer
 
 
 class MessagesTypeSerializer(ModelSerializer):

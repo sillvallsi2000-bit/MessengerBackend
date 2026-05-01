@@ -1,5 +1,4 @@
 from datetime import timedelta
-from typing import Any
 
 from django.utils import timezone
 from rest_framework.request import HttpRequest
@@ -14,7 +13,6 @@ from .session_service import SessionAccessToken
 
 
 class OperationbyToken:
-
     def user_by_id(user_id: int) -> UserModel:
         try:
             user = UserModel.objects.get(id=user_id)

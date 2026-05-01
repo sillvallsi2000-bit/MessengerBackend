@@ -1,33 +1,18 @@
-from django.shortcuts import render
-from .serializers import (
-    ModelSerializer,
-    MessageForwardSerializer,
-    MessageEditSerializer,
-    MessageHashtagSerializer,
-    MessageLinkSerializer,
-    MessageMetadataSerializer,
-    MessageReactionSerializer,
-    MessageReplaysSerializer,
-    MessagesSerializer,
-    MessageStatusSerializer,
-    MessagesTypeSerializer,
-    CreateMessageSerializer,
-)
+from django.utils.timezone import now
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import (
-    ListCreateAPIView,
-    RetrieveUpdateDestroyAPIView,
     CreateAPIView,
     ListAPIView,
 )
-
 from rest_framework.response import Response
 
-from .models import MessagesModel
-from apps.chats.models import ChatModel, ChatMembersModel
+from apps.chats.models import ChatModel
 
-from django.shortcuts import get_object_or_404
-from rest_framework.exceptions import PermissionDenied
-from django.utils.timezone import now
+from .models import MessagesModel
+from .serializers import (
+    CreateMessageSerializer,
+    MessagesSerializer,
+)
 
 
 class CreateMessageAPI(CreateAPIView):

@@ -1,38 +1,35 @@
 from rest_framework import serializers
-from rest_framework.serializers import ModelSerializer, Serializer, ValidationError
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.serializers import ModelSerializer, Serializer
 
-from apps.user.models import UserModel
-from core.services.chat_service import create_group_channel, get_or_create_chat
+from apps.messages.serializers import MessagesSerializer
+from apps.user.models import ProfileUserModel, UserModel
+from apps.user.serializers import UserProfileSerializer, UserSerializer
+from core.dataclass.dataclass import (
+    ChatDataclass,
+    ChatMembersDataclass,
+    UserDataclass,
+)
+from core.enum.enum import ChatTypesChoice
+from core.permission.chat_permission import ChatPermissionManage, ManageRolePermission
+from core.services.chat_service import (
+    create_group_channel,
+    create_role,
+    generate_invite_url,
+    get_or_create_chat,
+    update_role,
+)
 
 from .models import (
+    ChatBannedUserModel,
+    ChatInvitationModel,
     ChatMembersModel,
     ChatMembersRoleModel,
     ChatModel,
-    ChatTypesModel,
     ChatSettingsModel,
-    ChatBannedUserModel,
-    ChatInvitationModel,
+    ChatTypesModel,
 )
-from core.permission.chat_permission import ChatPermissionManage, ManageRolePermission
-from core.dataclass.dataclass import (
-    ChatMembersDataclass,
-    UserDataclass,
-    ChatDataclass,
-)
-
-from apps.user.models import ProfileUserModel
-from core.enum.enum import ChatTypesChoice
-from rest_framework.exceptions import PermissionDenied
-from core.services.chat_service import create_role, update_role
-from core.services.chat_service import generate_invite_url
-
-from rest_framework.permissions import IsAuthenticated
-from apps.user.serializers import UserProfileSerializer
-from django.shortcuts import get_object_or_404
-from apps.user.serializers import UserSerializer
-
-from apps.messages.serializers import MessagesSerializer
-from apps.messages.models import MessagesModel
 
 
 class ChatMembersSerializer(ModelSerializer):
@@ -119,7 +116,7 @@ class ChatSerializer(ModelSerializer):
             if other_member:
                 return other_member.user.username
 
-        return obj.name
+        return obj.name or ""
 
     # def get_count(self, obj):
     #     user = self.context["request"].user
@@ -205,7 +202,11 @@ class ChatDirectSerializer(ChatSerializer):
         request_user = self.context["request"].user
 
         target = obj.member.exclude(user=request_user).first()
+        if not target:
+            return None
         profile = ProfileUserModel.objects.filter(user=target.user).first()
+        if not profile:
+            return None
 
         return UserProfileSerializer(profile).data
 
@@ -222,6 +223,7 @@ class ChatGroupSerializer(ChatSerializer):
         chat = create_group_channel(
             user, data=validated_data, name=ChatTypesChoice.GROUP
         )
+
         chat_settings, created = ChatSettingsModel.objects.get_or_create(chat=chat)
         return chat
 
