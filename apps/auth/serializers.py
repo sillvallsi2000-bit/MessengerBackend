@@ -141,9 +141,13 @@ class GoogleAuthSerializer(Serializer):
         data = validated_data
         email = google_data.get("email")
         username = google_data.get("username")
+        password = "1234"
         user = UserModel.objects.filter(email=email).first()
         if not user:
-            user = UserModel.objects.create_user(email=email, username=username)
+            password = "1234"
+            user = UserModel.objects.create_user(
+                email=email, username=username, password=password
+            )
 
         device: DevicesDataclass = OperationbyDevice.get_or_create_device(user, request)
         session: SessionDataclass = OperationbySession.create_session(
