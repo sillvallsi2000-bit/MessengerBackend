@@ -16,7 +16,6 @@ from .extra_config.jwt_conf import *
 import os
 from config.extra_config.email_configuration import *
 
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -90,7 +89,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("redis", 6379)],
+            "hosts": [("localhost", 6379)],
         },
     },
 }

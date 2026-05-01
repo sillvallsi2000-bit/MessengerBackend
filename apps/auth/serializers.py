@@ -139,16 +139,20 @@ class GoogleAuthSerializer(Serializer):
         google_data = validated_data.pop("google_data")
         request = self.context["request"]
         data = validated_data
+        print(google_data)
         email = google_data.get("email")
-        username = google_data.get("username")
+        username = google_data.get("name", "username987")
         password = "1234"
+        print(email)
+        print(username)
         user = UserModel.objects.filter(email=email).first()
         if not user:
             password = "1234"
             user = UserModel.objects.create_user(
                 email=email, username=username, password=password
             )
-
+        new_refresh, new_access_token = OperationbyToken.generate_token(user=user)
+        data["refresh"] = new_refresh
         device: DevicesDataclass = OperationbyDevice.get_or_create_device(user, request)
         session: SessionDataclass = OperationbySession.create_session(
             user=user, device=device, data=data

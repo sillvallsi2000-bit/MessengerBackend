@@ -21,6 +21,14 @@ class OperationbyToken:
 
         return user
 
+    def generate_token(user: UserDataclass):
+        new_refresh = RefreshToken.for_user(user)
+        new_access_token = SessionAccessToken()
+        new_access_token["user_id"] = user.id
+        new_access_token["jti"] = new_refresh.access_token["jti"]
+        new_access_token.set_exp()
+        return new_refresh, new_access_token
+
     def update_token(
         user: UserDataclass, session: SessionDataclass
     ) -> tuple[RefreshToken, SessionAccessToken]:
