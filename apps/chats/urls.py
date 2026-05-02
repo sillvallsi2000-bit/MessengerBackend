@@ -16,6 +16,7 @@ from .views import (
     JoinToChatAPI,
     ListAllChatsAPI,
     ListCreateDirectChatAPI,
+    MarkAsReadAPI,
     SearchAllAPI,
     UpdateChatSettingsAPI,
     UpdateGroupSettingsAPI,
@@ -37,6 +38,7 @@ urlpatterns = [
     path("list_all_chat/", ListAllChatsAPI.as_view()),
     path("search_all/", SearchAllAPI.as_view()),
     path("get_group/<int:pk>/", GroupRetrieveAPI.as_view()),
+    path("chats/mark_read/<int:chat_id>/", MarkAsReadAPI.as_view()),
     
 
     # change

@@ -1,3 +1,6 @@
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+from django.core.files.storage import default_storage
 from django.utils.timezone import now
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import (
@@ -8,7 +11,7 @@ from rest_framework.response import Response
 
 from apps.chats.models import ChatModel
 
-from .models import MessagesModel
+from .models import MessageMetadataModel, MessagesModel
 from .serializers import (
     CreateMessageSerializer,
     MessagesSerializer,
@@ -25,11 +28,32 @@ class CreateMessageAPI(CreateAPIView):
         )
         serializer.is_valid(raise_exception=True)
         message = serializer.save()
-        chat = ChatModel.objects.filter(id=message.chat_id).update(
+
+        audio_file = self.request.FILES.get("audio")
+        if audio_file:
+            file_path = default_storage.save(f"audio/{audio_file.name}", audio_file)
+            MessageMetadataModel.objects.create(
+                message=message,
+                file_url=file_path,
+                file_size=audio_file.size,
+                file_name=audio_file.name,
+            )
+
+        ChatModel.objects.filter(id=message.chat_id).update(
             last_activity=now(), last_message_id=message.id
         )
+        message.refresh_from_db()
 
-        return Response(MessagesSerializer(message).data)
+        message_data = MessagesSerializer(
+            message, context={"request": self.request}
+        ).data
+
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f"chat_{message.chat_id}", {"type": "sender", "message": dict(message_data)}
+        )
+
+        return Response(message_data)
 
 
 class ListAllMessageAPI(ListAPIView):

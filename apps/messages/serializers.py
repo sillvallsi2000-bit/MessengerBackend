@@ -39,13 +39,21 @@ class MessageStatusSerializer(ModelSerializer):
         )
 
 
+class MessageMetadataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MessageMetadataModel
+        fields = ["file_url", "file_size", "file_name"]
+
+
 class MessagesSerializer(ModelSerializer):
     target_id = serializers.SerializerMethodField()
+    metadata = MessageMetadataSerializer(many=True, read_only=True)
 
     class Meta:
         model = MessagesModel
         fields = (
             "chat",
+            "metadata",
             "sender",
             "message_type",
             "message",
@@ -64,17 +72,6 @@ class MessagesSerializer(ModelSerializer):
         chat = obj.chat
         other_member = chat.member.exclude(user=request.user).first()
         return other_member.user.id
-
-
-class MessageMetadataSerializer(ModelSerializer):
-    class Meta:
-        model = MessageMetadataModel
-        fields = (
-            "message",
-            "file_url",
-            "file_size",
-            "file_name",
-        )
 
 
 class MessageEditSerializer(ModelSerializer):
@@ -152,9 +149,14 @@ class CreateMessageSerializer(Serializer):
         queryset=ChatModel.objects.all(), required=True
     )
     message_type = serializers.PrimaryKeyRelatedField(
-        queryset=MessagesTypeModel.objects.all()
+        queryset=MessagesTypeModel.objects.all(), required=False
     )
-    message = serializers.CharField()
+    message = serializers.CharField(required=False, allow_blank=True, default="")
+
+    def validate(self, attrs):
+        if not attrs.get("message_type"):
+            attrs["message_type"] = MessagesTypeModel.objects.get(id=1)
+        return attrs
 
     def create(self, validated_data):
         sender = self.context["sender"]

@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from django.utils.timezone import now
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
@@ -17,6 +18,7 @@ from apps.messages.models import MessagesModel, MessageStatusModel
 from apps.user.models import UserModel
 from core.dataclass.dataclass import ChatMembersDataclass
 from core.permission.chat_permission import ManageRolePermission
+from core.services.chat_service import getUsersFromChat
 
 from .models import (
     ChatInvitationModel,
@@ -275,6 +277,8 @@ class ChatRetrieveAPI(RetrieveAPIView):
                 defaults={"read_at": now(), "status": "read"},
             )
 
+        ChatMembersModel.objects.filter(chat=chat, user=user).update(last_read_at=now())
+        getUsersFromChat(chat)
         return chat
 
 
@@ -316,20 +320,17 @@ class SearchAllAPI(GenericAPIView):
         return Response(data)
 
 
-# from django.utils import timezone
+class MarkAsReadAPI(GenericAPIView):
+    permission_classes = [IsAuthenticated]
 
-
-# class MarkAsRead(GenericAPIView):
-#     permission_classes = [IsAuthenticated]
-
-#     def post(self, request, chat_id):
-#         member = ChatMembersModel.objects.filter(
-#             chat_id=chat_id, user=request.user
-#         ).first()
-#         if member:
-#             member.last_read_at = timezone.now()
-#             member.save(update_fields=["last_read_at"])
-#         return Response({"status": "ok"})
+    def post(self, request, chat_id):
+        member = ChatMembersModel.objects.filter(
+            chat_id=chat_id, user=request.user
+        ).first()
+        if member:
+            member.last_read_at = timezone.now()
+            member.save(update_fields=["last_read_at"])
+        return Response({"status": "ok"})
 
 
 # chat type all obj,
