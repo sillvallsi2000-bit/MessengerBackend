@@ -12,6 +12,10 @@ services:
     depends_on:
       - redis
 
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+
 
   redis:
     image : redis:7

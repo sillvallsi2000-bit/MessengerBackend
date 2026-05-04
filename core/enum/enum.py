@@ -52,4 +52,5 @@ class ChatInvitationChoice(models.TextChoices):
 class MessageTypeChoices(models.TextChoices):
     TEXT = "TEXT", "Text"
     IMAGE = "IMAGE", "Image"
+    FILE = "FILE", "File"
     VIDEO = "VIDEO", "Video"

@@ -1,5 +1,8 @@
 from typing import Any, Dict
-import requests
+
+from django.contrib.auth import get_user_model
+from google.auth.transport import requests as google_requests
+from google.oauth2 import id_token
 from rest_framework import serializers
 from rest_framework.request import HttpRequest
 from rest_framework.serializers import ModelSerializer, Serializer, ValidationError
@@ -9,7 +12,6 @@ from apps.user.serializers import UserSerializer
 from core.dataclass.dataclass import DevicesDataclass, SessionDataclass, UserDataclass
 from core.services.auth_service import OperationbyDevice, OperationbyToken
 from core.services.session_service import OperationbySession
-from django.contrib.auth import get_user_model
 
 UserModel = get_user_model()
 from .models import CodeUserModel, UserDeviceModel, UserSessionModel
@@ -123,15 +125,17 @@ class GoogleAuthSerializer(Serializer):
         fields = UserDeviceSerializer.Meta.fields + ("idToken",)
 
     def validate(self, attrs):
-        idToken = attrs.get("idToken")
+        id_token_value = attrs.get("idToken")
 
-        url = f"https://oauth2.googleapis.com/tokeninfo?id_token={idToken}"
-        response = requests.get(url)
+        try:
+            google_data = id_token.verify_oauth2_token(
+                id_token_value,
+                google_requests.Request(),
+                "793522367005-v1lhgbb1v34udj2il3bn4m5nquhflorv.apps.googleusercontent.com",
+            )
+        except ValueError as e:
+            raise serializers.ValidationError(f"Invalid Google token: {e}")
 
-        if response.status_code != 200:
-            raise serializers.ValidationError("Error")
-
-        google_data = response.json()
         attrs["google_data"] = google_data
         return attrs
 

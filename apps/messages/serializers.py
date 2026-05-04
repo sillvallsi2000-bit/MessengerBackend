@@ -52,6 +52,7 @@ class MessagesSerializer(ModelSerializer):
     class Meta:
         model = MessagesModel
         fields = (
+            "id",
             "chat",
             "metadata",
             "sender",
@@ -72,6 +73,17 @@ class MessagesSerializer(ModelSerializer):
         chat = obj.chat
         other_member = chat.member.exclude(user=request.user).first()
         return other_member.user.id
+
+
+class MessageRetrieveUpdateDestroySerializer(ModelSerializer):
+    class Meta:
+        model = MessagesModel
+        fields = ["id", "message", "is_edited", "is_delited", "is_pined"]
+        read_only_fields = ["id", "is_edited", "is_delited"]
+
+    def update(self, instance, validated_data):
+        validated_data["is_edited"] = True
+        return super().update(instance, validated_data)
 
 
 class MessageEditSerializer(ModelSerializer):

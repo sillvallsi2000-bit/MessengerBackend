@@ -1,4 +1,5 @@
 from django.db import models
+
 from apps.chats.models import ChatModel
 from apps.user.models import UserModel
 from core.enum.enum import MessageTypeChoices

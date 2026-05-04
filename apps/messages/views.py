@@ -6,7 +6,9 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import (
     CreateAPIView,
     ListAPIView,
+    RetrieveUpdateDestroyAPIView,
 )
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.chats.models import ChatModel
@@ -14,6 +16,7 @@ from apps.chats.models import ChatModel
 from .models import MessageMetadataModel, MessagesModel
 from .serializers import (
     CreateMessageSerializer,
+    MessageRetrieveUpdateDestroySerializer,
     MessagesSerializer,
 )
 
@@ -29,14 +32,14 @@ class CreateMessageAPI(CreateAPIView):
         serializer.is_valid(raise_exception=True)
         message = serializer.save()
 
-        audio_file = self.request.FILES.get("audio")
-        if audio_file:
-            file_path = default_storage.save(f"audio/{audio_file.name}", audio_file)
+        file = self.request.FILES.get("audio") or self.request.FILES.get("file")
+        if file:
+            file_path = default_storage.save(f"audio/{file.name}", file)
             MessageMetadataModel.objects.create(
                 message=message,
                 file_url=file_path,
-                file_size=audio_file.size,
-                file_name=audio_file.name,
+                file_size=file.size,
+                file_name=file.name,
             )
 
         ChatModel.objects.filter(id=message.chat_id).update(
@@ -71,3 +74,15 @@ class ListAllMessageAPI(ListAPIView):
             pass
 
         return MessagesModel.objects.filter(chat=chat)
+
+
+class RetrieveUpdateDestroyMessageAPI(RetrieveUpdateDestroyAPIView):
+    serializer_class = MessageRetrieveUpdateDestroySerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return MessagesModel.objects.filter(sender=self.request.user, is_delited=False)
+
+    def perform_destroy(self, instance):
+        instance.is_delited = True
+        instance.save(update_fields=["is_delited"])
