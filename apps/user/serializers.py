@@ -4,6 +4,7 @@ from rest_framework import serializers
 from rest_framework.request import Request
 from rest_framework.serializers import ModelSerializer, ValidationError
 
+from apps.chats.models import ChatModel
 from apps.user.models import ProfileUserModel
 from core.dataclass.dataclass import (
     BlockUserDataclass,
@@ -122,6 +123,7 @@ class ContactsUserSerializers(ModelSerializer):
     )
 
     contact_user = UserSerializer(read_only=True)
+    all_chat_media = serializers.SerializerMethodField()
 
     class Meta:
         model = UserContactsModel
@@ -133,8 +135,9 @@ class ContactsUserSerializers(ModelSerializer):
             "created_at",
             "updated_at",
             "contact_user",
+            "all_chat_media",
         )
-        read_only_fields = ("id", "user", "created_at", "updated_at")
+        read_only_fields = ("id", "user", "created_at", "updated_at", "chat")
 
     def validate(self, attrs: Dict[str, Any]) -> Dict[str, str]:
         request: Request = self.context.get("request")
@@ -159,6 +162,36 @@ class ContactsUserSerializers(ModelSerializer):
             attrs["contact_name"] = profile_user.username
 
         return attrs
+
+    def get_all_chat_media(self, obj):
+
+        from apps.messages.models import MessagesModel
+
+        chats_ids = (
+            ChatModel.objects.filter(member__user=obj.contact_user)
+            .filter(member__user=obj.user)
+            .values_list("id", flat=True)
+        )
+
+        media = MessagesModel.objects.filter(chat_id__in=chats_ids).exclude(
+            metadata__isnull=True
+        )
+        all_media = []
+
+        for msg in media:
+            media_queryset = msg.metadata.all()
+            for media in media_queryset:
+                all_media.append(
+                    {
+                        "file_url": media.file_url.url
+                        if hasattr(media.file_url, "url")
+                        else str(media.file_url),
+                        "file_name": media.file_name,
+                        "file_size": media.file_size,
+                    }
+                )
+
+        return all_media
 
 
 class BlockedUserSerializer(ModelSerializer):

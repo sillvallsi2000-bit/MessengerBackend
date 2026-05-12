@@ -118,15 +118,6 @@ class ChatSerializer(ModelSerializer):
 
         return obj.name or ""
 
-    # def get_count(self, obj):
-    #     user = self.context["request"].user
-    #     return (
-    #         MessagesModel.objects.filter(chat=obj)
-    #         .exclude(sender=user)
-    #         .exclude(statuses__user=user, statuses__read_at__isnull=False)
-    #         .count()
-    #     )
-
 
 class ChatBannedUserSerializer(ModelSerializer):
     class Meta:

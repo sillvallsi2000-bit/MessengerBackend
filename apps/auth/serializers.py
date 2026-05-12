@@ -145,6 +145,7 @@ class GoogleAuthSerializer(Serializer):
         data = validated_data
         print(google_data)
         email = google_data.get("email")
+        print(email)
         username = google_data.get("name", "username987")
         password = "1234"
         print(email)

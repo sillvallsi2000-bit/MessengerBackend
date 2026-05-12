@@ -32,14 +32,17 @@ class CreateMessageAPI(CreateAPIView):
         serializer.is_valid(raise_exception=True)
         message = serializer.save()
 
-        file = self.request.FILES.get("audio") or self.request.FILES.get("file")
-        if file:
-            file_path = default_storage.save(f"audio/{file.name}", file)
-            MessageMetadataModel.objects.create(
-                message=message,
-                file_url=file_path,
-                file_size=file.size,
-                file_name=file.name,
+        files = self.request.FILES.getlist("files")
+        for file in files:
+            MessageMetadataModel.objects.bulk_create(
+                [
+                    MessageMetadataModel(
+                        message=message,
+                        file_url=default_storage.save(f"uploads/{file.name}", file),
+                        file_size=file.size,
+                        file_name=file.name,
+                    )
+                ]
             )
 
         ChatModel.objects.filter(id=message.chat_id).update(
