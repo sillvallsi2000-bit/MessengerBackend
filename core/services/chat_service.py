@@ -104,3 +104,18 @@ def getUsersFromChat(chat: ChatDataclass):
         async_to_sync(channel_layer.group_send)(
             f"chat_{user_id}", {"type": "chat_update", "data": "reload"}
         )
+
+
+def notifyMessage(chat_id, instance, user=None):
+    from apps.messages.serializers import MessagesSerializer
+
+    channel_layer = get_channel_layer()
+
+    serializer = MessagesSerializer(
+        instance,
+        context={"request": type("obj", (object,), {"user": user}) if user else None},
+    )
+
+    async_to_sync(channel_layer.group_send)(
+        f"chat_{chat_id}", {"type": "message", "message": serializer.data}
+    )

@@ -13,7 +13,6 @@ class UserConsumer(GenericAsyncAPIConsumer):
             {"type": "send_user", "user_id": self.user.id, "status": True},
         )
         await self.channel_layer.group_add(self.group_chat, self.channel_name)
-        # self.chats = set()
         await self.accept()
         await self.user_is_online()
 

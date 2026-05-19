@@ -37,6 +37,9 @@ class MessagesModel(models.Model):
     is_pined = models.BooleanField(default=False)
     create_at = models.DateTimeField(auto_now_add=True)
     update_at = models.DateTimeField(auto_now=True)
+    reply_to = models.ForeignKey(
+        "self", on_delete=models.SET_NULL, null=True, blank=True, related_name="replies"
+    )
 
 
 class MessageMetadataModel(models.Model):
@@ -52,23 +55,17 @@ class MessageMetadataModel(models.Model):
 
 
 class MessageForwardModel(models.Model):
-    class Meta:
-        db_table = "message_forward"
-
-    message = models.ForeignKey(
-        MessagesModel, on_delete=models.CASCADE, related_name="forwards"
+    forwarded_message = models.OneToOneField(
+        MessagesModel, on_delete=models.CASCADE, related_name="forward_info"
     )
 
-    original_sender = models.ForeignKey(
-        UserModel, on_delete=models.CASCADE, related_name="sent_forwards"
-    )
-
-    original_chat = models.ForeignKey(
-        ChatModel, on_delete=models.CASCADE, related_name="chat_forwards"
+    original_message = models.ForeignKey(
+        MessagesModel, on_delete=models.CASCADE, related_name="original_forwards"
     )
 
     forward_by = models.ForeignKey(
-        UserModel, on_delete=models.CASCADE, related_name="user_forwards"
+        UserModel,
+        on_delete=models.CASCADE,
     )
 
     forward_at = models.DateTimeField(auto_now_add=True)
@@ -95,10 +92,8 @@ class MessageEditModel(models.Model):
 class MessageReactionModel(models.Model):
     class Meta:
         db_table = "message_reaction"
+        unique_together = ["user", "message"]
 
-    chat = models.ForeignKey(
-        ChatModel, on_delete=models.CASCADE, related_name="chat_reactions"
-    )
     user = models.ForeignKey(
         UserModel, on_delete=models.CASCADE, related_name="user_reactions"
     )
@@ -149,17 +144,3 @@ class MessageHashtagModel(models.Model):
     normalized_hashtag = models.CharField(max_length=100)
     position_start = models.IntegerField()
     position_end = models.IntegerField()
-
-
-class MessageReplaysModel(models.Model):
-    class Meta:
-        db_table = "message_replays"
-
-    message = models.ForeignKey(
-        MessagesModel, on_delete=models.CASCADE, related_name="replies_sent"
-    )
-    reply_to = models.ForeignKey(
-        MessagesModel, on_delete=models.CASCADE, related_name="replies_received"
-    )
-    text = models.TextField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)

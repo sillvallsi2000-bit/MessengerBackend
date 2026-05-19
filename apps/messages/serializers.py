@@ -3,7 +3,7 @@ from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer, Serializer
 
 from apps.chats.models import ChatModel
-from core.services.chat_service import getUsersFromChat
+from core.services.chat_service import getUsersFromChat, notifyMessage
 
 from .models import (
     MessageEditModel,
@@ -12,7 +12,6 @@ from .models import (
     MessageLinkModel,
     MessageMetadataModel,
     MessageReactionModel,
-    MessageReplaysModel,
     MessagesModel,
     MessageStatusModel,
     MessagesTypeModel,
@@ -48,6 +47,7 @@ class MessageMetadataSerializer(serializers.ModelSerializer):
 class MessagesSerializer(ModelSerializer):
     target_id = serializers.SerializerMethodField()
     metadata = MessageMetadataSerializer(many=True, read_only=True)
+    reply_to = serializers.SerializerMethodField()
 
     class Meta:
         model = MessagesModel
@@ -64,6 +64,7 @@ class MessagesSerializer(ModelSerializer):
             "create_at",
             "update_at",
             "target_id",
+            "reply_to",
         )
 
     def get_target_id(self, obj):
@@ -73,6 +74,15 @@ class MessagesSerializer(ModelSerializer):
         chat = obj.chat
         other_member = chat.member.exclude(user=request.user).first()
         return other_member.user.id
+
+    def get_reply_to(self, obj):
+        if obj.reply_to is None:
+            return None
+        return {
+            "id": obj.reply_to.id,
+            "sender": obj.reply_to.sender.username,
+            "message": obj.reply_to.message,
+        }
 
 
 class MessageRetrieveUpdateDestroySerializer(ModelSerializer):
@@ -101,9 +111,8 @@ class MessageForwardSerializer(ModelSerializer):
     class Meta:
         model = MessageForwardModel
         fields = (
-            "message",
-            "original_sender",
-            "original_chat",
+            "forwarded_message",
+            "original_message",
             "forward_by",
             "forward_at",
         )
@@ -137,26 +146,26 @@ class MessageReactionSerializer(ModelSerializer):
     class Meta:
         model = MessageReactionModel
         fields = (
-            "chat",
-            "user",
             "message",
             "create_at",
+            "type",
             "update_at",
         )
 
-
-class MessageReplaysSerializer(ModelSerializer):
-    class Meta:
-        model = MessageReplaysModel
-        fields = (
-            "message",
-            "reply_to",
-            "text",
-            "created_at",
+    def create(self, validated_data):
+        user = self.context["user"]
+        reaction, created = MessageReactionModel.objects.update_or_create(
+            user=user,
+            message=validated_data["message"],
+            defaults={"type": validated_data["type"]},
         )
+        return reaction
 
 
 class CreateMessageSerializer(Serializer):
+    reply_to = serializers.PrimaryKeyRelatedField(
+        queryset=MessagesModel.objects.all(), required=False, allow_null=True
+    )
     chat = serializers.PrimaryKeyRelatedField(
         queryset=ChatModel.objects.all(), required=True
     )
@@ -179,3 +188,38 @@ class CreateMessageSerializer(Serializer):
         chat.save()
         getUsersFromChat(chat)
         return message
+
+
+class CreateForwardMessageSerializer(Serializer):
+    original_message = serializers.PrimaryKeyRelatedField(
+        queryset=MessagesModel.objects.all(), write_only=True
+    )
+
+    target_chat = serializers.PrimaryKeyRelatedField(
+        queryset=ChatModel.objects.all(), write_only=True
+    )
+
+    def create(self, validated_data):
+        request = self.context["request"]
+        original_message = self.validated_data["original_message"]
+        target_chat = self.validated_data["target_chat"]
+
+        forward_message = MessagesModel.objects.create(
+            chat=target_chat,
+            sender=request.user,
+            message=original_message.message,
+            message_type=original_message.message_type,
+        )
+
+        MessageForwardModel.objects.create(
+            forwarded_message=forward_message,
+            original_message=original_message,
+            forward_by=request.user,
+        )
+
+        target_chat.last_message = forward_message
+        target_chat.last_activity = timezone.now()
+        target_chat.save()
+        getUsersFromChat(chat=target_chat)
+        notifyMessage(target_chat.id, forward_message, user=request.user)
+        return forward_message
